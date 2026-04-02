@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -533,68 +534,47 @@ const state = {
 // ════════════════════════════════════════════
 // FIREBASE
 // ════════════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDzfIVORStmgOgnsRHphf40LX7vpXzYvcU",
+  authDomain: "jeopardycarnot.firebaseapp.com",
+  databaseURL: "https://jeopardycarnot-default-rtdb.firebaseio.com",
+  projectId: "jeopardycarnot",
+  storageBucket: "jeopardycarnot.firebasestorage.app",
+  messagingSenderId: "134138179325",
+  appId: "1:134138179325:web:37ecdeae1a4d694c315894"
+};
+
 let db = null;
 let gameRef = null;
 let scoresRef = null;
-const FB_STORAGE_KEY = 'jeopardy_fb_config';
-function loadSavedConfig() {
-  try {
-    const raw = localStorage.getItem(FB_STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch(e) { return null; }
-}
-function goSetup() {
-  const saved = loadSavedConfig();
-  if (saved) {
-    document.getElementById('fb-apikey').value = saved.apiKey || '';
-    document.getElementById('fb-authdomain').value = saved.authDomain || '';
-    document.getElementById('fb-dburl').value = saved.databaseURL || '';
-    document.getElementById('fb-projectid').value = saved.projectId || '';
-  }
-  showScreen('setup');
-}
-function initFirebase() {
-  const apiKey = document.getElementById('fb-apikey').value.trim();
-  const authDomain = document.getElementById('fb-authdomain').value.trim();
-  const databaseURL = document.getElementById('fb-dburl').value.trim();
-  const projectId = document.getElementById('fb-projectid').value.trim();
-  if (!apiKey || !databaseURL || !projectId) {
-    alert('Por favor completa al menos: API Key, Database URL y Project ID.');
-    return;
-  }
-  const config = { apiKey, authDomain, databaseURL, projectId };
-  localStorage.setItem(FB_STORAGE_KEY, JSON.stringify(config));
+
+function autoConnectFirebase() {
   try {
     if (firebase.apps.length === 0) {
-      firebase.initializeApp(config);
+      firebase.initializeApp(FIREBASE_CONFIG);
     }
     db = firebase.database();
     gameRef = db.ref('game');
     scoresRef = db.ref('scores');
-    setConnStatus('connected', '🟢 Firebase conectado');
-    goMC();
-  } catch(e) {
-    alert('Error al conectar Firebase: ' + e.message);
-    setConnStatus('error', '🔴 Error Firebase');
-  }
-}
-function tryAutoConnect() {
-  const saved = loadSavedConfig();
-  if (!saved || !saved.databaseURL) return false;
-  try {
-    if (firebase.apps.length === 0) {
-      firebase.initializeApp(saved);
-    }
-    db = firebase.database();
-    gameRef = db.ref('game');
-    scoresRef = db.ref('scores');
-    setConnStatus('connected', '🟢 Firebase');
+    setConnStatus('connected', '🟢 Conectado');
     return true;
   } catch(e) {
-    setConnStatus('error', '🔴 Firebase error');
+    setConnStatus('error', '🔴 Error');
     return false;
   }
+}
+
+function goSetup() {
+  // Firebase ya está configurado — ir directo al tablero
+  goMC();
+}
+
+function initFirebase() {
+  goMC();
+}
+
+function tryAutoConnect() {
+  return autoConnectFirebase();
 }
 function setConnStatus(cls, text) {
   const el = document.getElementById('conn-status');
@@ -1003,14 +983,12 @@ function esc(str) {
 // ════════════════════════════════════════════
 window.addEventListener('load', () => {
   document.getElementById('overlay-name').classList.remove('show');
-  // Check if URL has ?player param — auto show player mode
+  // Conectar Firebase automáticamente para todos
+  autoConnectFirebase();
+  // Si la URL tiene ?mode=player, ir directo a la pantalla de jugador
   const params = new URLSearchParams(window.location.search);
   if (params.get('mode') === 'player') {
-    // Try auto-connect with saved config
-    const connected = tryAutoConnect();
-    if (connected) {
-      goPlayer();
-    }
+    goPlayer();
   }
 });
 </script>
