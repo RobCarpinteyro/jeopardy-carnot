@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Jeopardy Carnot</title>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<!-- QR Code generator -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root {
+  --gold: #D4A017;
+  --gold-light: #F5C842;
+  --navy: #0A1628;
+  --navy-mid: #162040;
+  --navy-light: #1E3060;
+  --navy-card: #243570;
+  --correct: #1A9B5F;
+  --wrong: #C0392B;
+  --white: #FFFFFF;
+  --off-white: #F0F4FF;
+  --dim: rgba(255,255,255,0.55);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Georgia', serif;
+  background: var(--navy);
+  color: var(--white);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+/* SCREENS */
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: flex; flex-direction: column; }
+/* LANDING */
+#screen-landing {
+  align-items: center; justify-content: center;
+  text-align: center; padding: 2rem;
+  background: radial-gradient(ellipse at 50% 30%, #1E3060 0%, var(--navy) 70%);
+}
+.logo-title {
+  font-size: clamp(2.2rem, 7vw, 4rem);
+  font-weight: bold; color: var(--gold-light);
+  letter-spacing: 0.06em;
+  text-shadow: 0 2px 24px rgba(212,160,23,0.5);
+  margin-bottom: 0.2rem;
+}
+.logo-sub {
+  font-size: clamp(0.8rem, 2vw, 1rem);
+  color: var(--dim); letter-spacing: 0.18em;
+  text-transform: uppercase; margin-bottom: 2.5rem;
+}
+.module-selector {
+  display: flex; gap: 0.75rem; margin-bottom: 2rem;
+  flex-wrap: wrap; justify-content: center;
+}
+.mod-btn {
+  padding: 0.6rem 1.2rem; border-radius: 20px;
+  border: 2px solid var(--gold); background: transparent;
+  color: var(--gold-light); cursor: pointer;
+  font-family: inherit; font-size: 0.85rem;
+  transition: all 0.2s; line-height: 1.4;
+}
+.mod-btn.active { background: var(--gold); color: var(--navy); font-weight: bold; }
+.btn-group { display: flex; flex-direction: column; gap: 1rem; width: 100%; max-width: 320px; }
+.btn {
+  padding: 1rem 2rem; border: none; border-radius: 8px;
+  font-size: 1.05rem; font-family: inherit; cursor: pointer;
+  font-weight: bold; letter-spacing: 0.05em;
+  transition: transform 0.1s;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--gold); color: var(--navy); }
+.btn-secondary { background: transparent; color: var(--gold-light); border: 2px solid var(--gold); }
+.btn-sm {
+  padding: 0.45rem 1rem; font-size: 0.85rem; border-radius: 6px;
+  border: none; cursor: pointer; font-family: inherit; font-weight: bold;
+  transition: transform 0.1s;
+}
+.btn-sm:active { transform: scale(0.97); }
+/* FIREBASE SETUP SCREEN */
+#screen-setup {
+  align-items: center; justify-content: center;
+  padding: 2rem; background: var(--navy-mid);
+}
+.setup-box {
+  background: var(--navy-card); border: 2px solid var(--gold);
+  border-radius: 12px; padding: 2rem; max-width: 560px; width: 100%;
+}
+.setup-box h2 { color: var(--gold-light); margin-bottom: 0.5rem; font-size: 1.3rem; }
+.setup-box p { color: var(--dim); font-size: 0.88rem; line-height: 1.6; margin-bottom: 1.25rem; }
+.setup-box code {
+  display: block; background: rgba(0,0,0,0.4); border-radius: 6px;
+  padding: 0.8rem 1rem; font-size: 0.78rem; color: #7EC8E3;
+  margin-bottom: 1.25rem; line-height: 1.6; white-space: pre-wrap;
+}
+.setup-field { margin-bottom: 0.9rem; }
+.setup-field label { display: block; font-size: 0.78rem; color: var(--dim); margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.setup-field input {
+  width: 100%; padding: 0.7rem 0.9rem; border-radius: 6px;
+  border: 1.5px solid rgba(212,160,23,0.4); background: var(--navy-light);
+  color: var(--white); font-size: 0.9rem; font-family: monospace;
+}
+.setup-field input:focus { outline: none; border-color: var(--gold); }
+/* BOARD */
+#screen-board { background: var(--navy); }
+.board-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.7rem 1rem; background: var(--navy-mid);
+  border-bottom: 2px solid var(--gold); flex-shrink: 0;
+}
+.board-header h1 { font-size: clamp(1rem, 3vw, 1.4rem); color: var(--gold-light); letter-spacing: 0.08em; }
+.board-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 5px; padding: 6px; flex: 1;
+}
+.cat-header {
+  background: var(--navy-card); border: 2px solid var(--gold);
+  border-radius: 6px; padding: 0.4rem 0.2rem;
+  text-align: center; font-size: clamp(0.5rem, 1.1vw, 0.72rem);
+  font-weight: bold; color: var(--gold-light);
+  letter-spacing: 0.03em; text-transform: uppercase;
+  line-height: 1.3; display: flex; align-items: center;
+  justify-content: center; min-height: 56px;
+}
+.cell {
+  background: var(--navy-card); border: 2px solid var(--navy-light);
+  border-radius: 6px; display: flex; align-items: center;
+  justify-content: center; cursor: pointer;
+  transition: background 0.15s, border-color 0.15s; min-height: 50px;
+}
+.cell:hover:not(.used) { border-color: var(--gold); background: var(--navy-light); }
+.cell .pts {
+  font-size: clamp(1rem, 3vw, 1.7rem); font-weight: bold;
+  color: var(--gold-light); text-shadow: 0 1px 8px rgba(245,200,66,0.4);
+}
+.cell.used { opacity: 0.18; pointer-events: none; }
+.cell.used .pts { display: none; }
+/* QUESTION (MC) */
+#screen-question {
+  align-items: center; justify-content: center;
+  padding: 1.5rem; background: var(--navy-mid);
+}
+.q-box {
+  background: var(--navy-card); border: 2px solid var(--gold);
+  border-radius: 12px; padding: 2rem; max-width: 700px; width: 100%;
+}
+.q-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+.q-cat { font-size: 0.78rem; color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; }
+.q-pts-badge { background: var(--gold); color: var(--navy); font-weight: bold; padding: 0.2rem 0.7rem; border-radius: 20px; font-size: 1rem; }
+.timer-display { font-size: 2.8rem; font-weight: bold; color: var(--gold-light); text-align: center; font-variant-numeric: tabular-nums; }
+.timer-bar-wrap { width: 100%; height: 6px; background: var(--navy-light); border-radius: 3px; margin: 0.4rem 0 1.25rem; overflow: hidden; }
+.timer-bar { height: 100%; background: var(--gold); border-radius: 3px; transition: width 1s linear, background 0.5s; }
+.q-text { font-size: clamp(0.95rem, 2.2vw, 1.2rem); line-height: 1.55; margin-bottom: 1.5rem; color: var(--off-white); font-style: italic; }
+.options { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.5rem; }
+.opt-btn {
+  background: var(--navy-light); border: 2px solid transparent;
+  border-radius: 8px; padding: 0.75rem 1rem; color: var(--white);
+  font-size: clamp(0.82rem, 1.8vw, 0.96rem); font-family: inherit;
+  text-align: left; line-height: 1.4;
+}
+.opt-btn.correct { background: var(--correct) !important; border-color: #27AE60; }
+.opt-btn.wrong { background: var(--wrong) !important; border-color: #E74C3C; }
+.opt-letter {
+  display: inline-block; width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(255,255,255,0.15); text-align: center; line-height: 22px;
+  font-size: 0.8rem; font-weight: bold; margin-right: 0.5rem;
+}
+.q-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+/* LIVE RESPONSE COUNTER */
+.response-bar {
+  display: flex; align-items: center; gap: 0.5rem;
+  margin-bottom: 1rem; font-size: 0.8rem; color: var(--dim);
+}
+.response-bar span { font-weight: bold; color: var(--gold-light); }
+/* PLAYER SCREEN */
+#screen-player { background: var(--navy-mid); }
+.player-top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.7rem 1rem; background: var(--navy-mid);
+  border-bottom: 2px solid var(--gold); flex-shrink: 0;
+}
+.player-name-tag { font-weight: bold; color: var(--gold-light); font-size: 0.95rem; }
+.player-pts-total { font-size: 1.15rem; font-weight: bold; color: var(--gold-light); }
+.player-inner {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  padding: 1rem; width: 100%; max-width: 520px; margin: 0 auto;
+}
+.player-waiting { color: var(--dim); font-size: 1.1rem; line-height: 2; text-align: center; }
+.player-q-box {
+  background: var(--navy-card); border: 2px solid var(--gold);
+  border-radius: 12px; padding: 1.4rem; width: 100%;
+}
+.player-q-text { font-size: clamp(0.9rem, 2.3vw, 1.1rem); line-height: 1.55; margin-bottom: 1.25rem; color: var(--off-white); font-style: italic; }
+.player-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; }
+.player-opt {
+  background: var(--navy-light); border: 2px solid transparent;
+  border-radius: 8px; padding: 0.8rem 0.65rem; color: var(--white);
+  font-size: clamp(0.78rem, 1.9vw, 0.92rem); font-family: inherit;
+  cursor: pointer; transition: background 0.15s, border-color 0.15s; line-height: 1.4; text-align: left;
+}
+.player-opt:hover:not(:disabled) { border-color: var(--gold); }
+.player-opt:disabled { cursor: default; }
+.player-opt.selected { border-color: var(--gold-light); background: rgba(212,160,23,0.2); }
+.player-opt.correct { background: var(--correct) !important; border-color: #27AE60; }
+.player-opt.wrong { background: var(--wrong) !important; border-color: #E74C3C; }
+.feedback-msg {
+  margin-top: 0.9rem; padding: 0.7rem 1rem; border-radius: 8px;
+  font-size: 1rem; font-weight: bold; text-align: center;
+}
+.feedback-msg.correct { background: rgba(26,155,95,0.2); color: #2ECC71; }
+.feedback-msg.wrong { background: rgba(192,57,43,0.2); color: #E74C3C; }
+.feedback-msg.slow { background: rgba(212,160,23,0.2); color: var(--gold-light); }
+.player-timer-bar-wrap { width: 100%; height: 4px; background: var(--navy-light); border-radius: 2px; margin-bottom: 1rem; overflow: hidden; }
+.player-timer-bar { height: 100%; background: var(--gold); border-radius: 2px; transition: width 1s linear, background 0.5s; }
+/* SCOREBOARD */
+#screen-scores { padding: 1rem; background: var(--navy-mid); overflow-y: auto; }
+.score-header { text-align: center; padding: 1rem 0 1.5rem; color: var(--gold-light); font-size: 1.4rem; letter-spacing: 0.1em; }
+.score-table { width: 100%; max-width: 480px; margin: 0 auto; }
+.score-row {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.7rem 1rem; margin-bottom: 0.35rem;
+  background: var(--navy-card); border-radius: 8px;
+  border: 1px solid var(--navy-light); transition: all 0.3s;
+  animation: slideIn 0.3s ease;
+}
+@keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.score-rank { font-size: 1.1rem; font-weight: bold; color: var(--dim); min-width: 28px; }
+.score-rank.g { color: #FFD700; } .score-rank.s { color: #C0C0C0; } .score-rank.b { color: #CD7F32; }
+.score-name { flex: 1; font-size: 0.93rem; }
+.score-pts { font-size: 1.1rem; font-weight: bold; color: var(--gold-light); }
+/* QR PANEL */
+#screen-qr {
+  align-items: center; justify-content: center;
+  background: var(--navy-mid); padding: 2rem; text-align: center;
+}
+.qr-box {
+  background: var(--white); border-radius: 12px;
+  padding: 1.5rem; display: inline-block; margin: 1.5rem auto;
+}
+#qr-url-display { font-size: 0.8rem; color: var(--dim); margin-top: 0.5rem; word-break: break-all; }
+/* STATUS DOT */
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--correct); display: inline-block; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+/* OVERLAY */
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(10,22,40,0.96); z-index: 100;
+  align-items: center; justify-content: center;
+  flex-direction: column; padding: 2rem; text-align: center;
+}
+.overlay.show { display: flex; }
+.overlay input {
+  width: 100%; max-width: 300px; padding: 0.9rem 1rem; border-radius: 8px;
+  border: 2px solid var(--gold); background: var(--navy-light);
+  color: var(--white); font-size: 1rem; font-family: inherit; text-align: center; margin: 1rem 0;
+}
+.overlay input::placeholder { color: var(--dim); }
+.overlay input:focus { outline: none; border-color: var(--gold-light); }
+/* CONN STATUS */
+#conn-status {
+  position: fixed; top: 8px; right: 10px; font-size: 0.72rem;
+  padding: 3px 10px; border-radius: 10px; z-index: 200;
+  background: rgba(0,0,0,0.5); color: var(--dim);
+}
+#conn-status.connected { color: #2ECC71; }
+#conn-status.error { color: #E74C3C; }
+</style>
+</head>
+<body>
+<div id="conn-status">⚪ desconectado</div>
+<!-- ═══════════════════════════════════
+     LANDING
+═══════════════════════════════════ -->
+<div id="screen-landing" class="screen active">
+  <div style="align-items:center;justify-content:center;text-align:center;padding:2rem;display:flex;flex-direction:column;flex:1;background:radial-gradient(ellipse at 50% 30%,#1E3060 0%,var(--navy) 70%);">
+    <div class="logo-title">JEOPARDY</div>
+    <div class="logo-sub">Carnot · Educación Médica Continua</div>
+    <div class="module-selector">
+      <button class="mod-btn active" onclick="selectModule(0)">Módulo 1<br><small>Reflujo + Estreñimiento</small></button>
+      <button class="mod-btn" onclick="selectModule(1)">Módulo 2<br><small>Microbiota + SII</small></button>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="goSetup()">🎤 Maestro de Ceremonias</button>
+      <button class="btn btn-secondary" onclick="goPlayer()">📱 Soy Participante</button>
+    </div>
+    <p style="margin-top:1.5rem;font-size:0.78rem;color:var(--dim);max-width:260px;">
+      El MC configura la sesión. Los 150 participantes escanean el QR y entran como jugadores.
+    </p>
+  </div>
+</div>
+<!-- ═══════════════════════════════════
+     FIREBASE SETUP (MC only)
+═══════════════════════════════════ -->
+<div id="screen-setup" class="screen">
+  <div class="setup-box">
+    <h2>⚙️ Configurar Firebase</h2>
+    <p>Para conectar los 150 dispositivos en tiempo real necesitas un proyecto gratuito de Firebase. Solo se hace una vez. Sigue estos pasos:</p>
+    <code>1. Ve a console.firebase.google.com
+2. "Agregar proyecto" → nombre cualquiera → Continuar
+3. Desactiva Analytics → Crear proyecto
+4. En el menú izquierdo: Build → Realtime Database
+5. "Crear base de datos" → elige región → modo prueba → Habilitar
+6. Clic en el ícono &lt;/&gt; (Web) en la pantalla principal
+7. Registra la app → copia los valores de abajo</code>
+    <div class="setup-field">
+      <label>API Key</label>
+      <input type="text" id="fb-apikey" placeholder="AIzaSy..." />
+    </div>
+    <div class="setup-field">
+      <label>Auth Domain</label>
+      <input type="text" id="fb-authdomain" placeholder="mi-proyecto.firebaseapp.com" />
+    </div>
+    <div class="setup-field">
+      <label>Database URL</label>
+      <input type="text" id="fb-dburl" placeholder="https://mi-proyecto-default-rtdb.firebaseio.com" />
+    </div>
+    <div class="setup-field">
+      <label>Project ID</label>
+      <input type="text" id="fb-projectid" placeholder="mi-proyecto" />
+    </div>
+    <div style="display:flex;gap:0.75rem;margin-top:1.5rem;flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="initFirebase()">Conectar y abrir tablero →</button>
+      <button class="btn-sm" style="background:var(--navy-light);color:var(--dim);" onclick="showScreen('landing')">← Volver</button>
+    </div>
+    <p class="setup-hint" style="margin-top:1rem;">💡 La configuración se guarda en este dispositivo para la próxima sesión.</p>
+  </div>
+</div>
+<!-- ═══════════════════════════════════
+     MC BOARD
+═══════════════════════════════════ -->
+<div id="screen-board" class="screen">
+  <div class="board-header">
+    <div>
+      <h1>JEOPARDY</h1>
+      <div style="font-size:0.7rem;color:var(--dim);" id="board-module-label"></div>
+    </div>
+    <div style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;">
+      <button class="btn-sm" style="background:var(--navy-light);color:var(--white);" onclick="showQR()">📱 QR</button>
+      <button class="btn-sm" style="background:var(--navy-light);color:var(--white);" onclick="showScores()">🏆</button>
+      <button class="btn-sm" style="background:var(--navy-light);color:var(--white);" onclick="resetBoard()">🔄</button>
+      <button class="btn-sm" style="background:var(--navy-light);color:var(--white);" onclick="showScreen('landing')">⬅</button>
+    </div>
+  </div>
+  <div class="board-grid" id="board-grid"></div>
+</div>
+<!-- ═══════════════════════════════════
+     QUESTION (MC view)
+═══════════════════════════════════ -->
+<div id="screen-question" class="screen">
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:var(--navy-mid);">
+    <div class="q-box">
+      <div class="q-meta">
+        <div class="q-cat" id="q-cat-label"></div>
+        <div class="q-pts-badge" id="q-pts-label"></div>
+      </div>
+      <div style="text-align:center;">
+        <div class="timer-display" id="timer-display">20</div>
+      </div>
+      <div class="timer-bar-wrap"><div class="timer-bar" id="timer-bar" style="width:100%"></div></div>
+      <div class="response-bar">
+        <span class="dot"></span> &nbsp;Respuestas recibidas: <span id="response-count">0</span>
+      </div>
+      <div class="q-text" id="q-text-display"></div>
+      <div class="options" id="q-options"></div>
+      <div class="q-actions">
+        <button class="btn-sm" style="background:var(--gold);color:var(--navy);" id="btn-reveal" onclick="revealAnswer()">Revelar respuesta</button>
+        <button class="btn-sm" style="background:var(--navy-light);color:var(--white);" onclick="backToBoard()">← Tablero</button>
+        <button class="btn-sm" style="background:var(--navy-light);color:var(--white);" onclick="showScores()">🏆 Marcador</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ═══════════════════════════════════
+     PLAYER SCREEN
+═══════════════════════════════════ -->
+<div id="screen-player" class="screen">
+  <div class="player-top">
+    <div class="player-name-tag" id="player-name-display">—</div>
+    <div style="font-size:0.7rem;color:var(--dim);flex:1;text-align:center;" id="player-module-display"></div>
+    <div class="player-pts-total" id="player-pts-display">0 pts</div>
+  </div>
+  <div class="player-inner">
+    <div id="player-content" style="width:100%;">
+      <div class="player-waiting">
+        <span class="dot"></span> Conectado — esperando pregunta…<br>
+        <span style="font-size:0.82rem;">El MC activará la siguiente ronda</span>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ═══════════════════════════════════
+     SCOREBOARD
+═══════════════════════════════════ -->
+<div id="screen-scores" class="screen">
+  <div class="score-header">🏆 Marcador en vivo</div>
+  <div class="score-table" id="score-table"></div>
+  <div style="text-align:center;margin-top:2rem;">
+    <button class="btn btn-secondary" style="max-width:200px;" onclick="backFromScores()">← Volver</button>
+  </div>
+</div>
+<!-- ═══════════════════════════════════
+     QR SCREEN
+═══════════════════════════════════ -->
+<div id="screen-qr" class="screen">
+  <div style="font-size:1.5rem;color:var(--gold-light);margin-bottom:0.5rem;">📱 Únete al juego</div>
+  <p style="color:var(--dim);font-size:0.9rem;margin-bottom:1rem;">Escanea con la cámara de tu teléfono</p>
+  <div class="qr-box" id="qr-container"></div>
+  <div id="qr-url-display"></div>
+  <div style="margin-top:1.5rem;display:flex;gap:0.75rem;flex-wrap:wrap;justify-content:center;">
+    <button class="btn btn-primary" onclick="showScreen('board')">← Volver al tablero</button>
+    <button class="btn-sm" style="background:var(--navy-card);color:var(--gold-light);border:1px solid var(--gold);" onclick="copyJoinUrl()">Copiar URL</button>
+  </div>
+</div>
+<!-- ═══════════════════════════════════
+     OVERLAYS
+═══════════════════════════════════ -->
+<div id="overlay-name" class="overlay">
+  <div style="font-size:1.7rem;color:var(--gold-light);margin-bottom:0.4rem;">¡Bienvenido!</div>
+  <div style="color:var(--dim);font-size:0.9rem;">Escribe tu nombre para registrar tus puntos</div>
+  <input type="text" id="name-input" placeholder="Tu nombre completo" maxlength="30"
+    onkeydown="if(event.key==='Enter')confirmName()">
+  <button class="btn btn-primary" style="max-width:220px;" onclick="confirmName()">Entrar al juego →</button>
+</div>
+<script>
+// ════════════════════════════════════════════
+// GAME DATA
+// ════════════════════════════════════════════
+const MODULES = [
+  {
+    name: "Módulo 1: Reflujo + Estreñimiento",
+    categories: [
+      { name: "P-CAB", questions: [
+        { pts:100, q:"¿Cuál es el principal mecanismo de acción de los P-CAB?", opts:["Unión covalente a residuos de cisteína de la H+/K+ ATPasa","Bloqueo competitivo del potasio en la H+/K+ ATPasa","Bloqueo de las células delta productoras de somatostatina","Antagonismo de los receptores M2 en célula parietal"], ans:1 },
+        { pts:200, q:"¿Cuál de los siguientes correlaciona mejor con la eficacia clínica de los fármacos antisecretores en ERGE?", opts:["Vida media plasmática más prolongada","Ausencia de fuga ácida nocturna","Mantener pH intragástrico >4","Metabolismo lento por CYP 2C19"], ans:2 },
+        { pts:300, q:"¿Cuál es la característica de un fármaco considerado como la más importante por los pacientes con ERA?", opts:["Bajo costo","Mínimos eventos adversos","Dosis única al día","Rapidez de acción"], ans:3 },
+        { pts:400, q:"Los P-CAB han mostrado ser más efectivos que los IBP en la ERGE erosiva en lo siguiente, EXCEPTO:", opts:["Tasa de cicatrización de esofagitis leve","Tasa de cicatrización de esofagitis grave","Control del reflujo nocturno","Rapidez en alivio de síntomas"], ans:0 },
+        { pts:500, q:"¿Estructura química del tegoprazan?", opts:["Pirimidina","Sulfonil pirrol","Benzimidazol","Imidazopiridina"], ans:2 },
+      ]},
+      { name: "ERGE", questions: [
+        { pts:100, q:"Paciente con esofagitis B. Persiste con síntomas a pesar de IBP bid 2 meses. Nueva endoscopia negativa y pH-impedancia con IBP mostró TEA 2% y asociación sintomática positiva con reflujo no ácido. ¿Cuál es el diagnóstico?", opts:["Pirosis funcional","Hipersensibilidad al reflujo","Sobreposición ERGE + Hipersensibilidad al reflujo","Sobreposición ERGE + Pirosis funcional"], ans:2 },
+        { pts:200, q:"¿Cuál es la característica de tegoprazan ideal para tratamiento a demanda en ERGE?", opts:["Rapidez de acción","Mantiene pH intragástrico >4 por 24 h","Sin interacción con alimentos","Todas"], ans:3 },
+        { pts:300, q:"Mujer 30 años, pirosis de 9 meses, endoscopia negativa, sin respuesta a IBP qd. pH-impedancia sin IBP: TEA 3%, IS 74%. ¿Cuál es su conducta terapéutica?", opts:["Doble dosis de IBP","Agregar alginato","Cambiar a neuromodulador","Cambiar a P-CAB"], ans:2 },
+        { pts:400, q:"Hombre 55 años con esofagitis C y hernia hiatal de 2 cm, en esomeprazol bid por 2 meses y síntomas persistentes. Erosiones confluentes 50% circunferencia. Manometría con aperistalsis. ¿Cuál es su conducta?", opts:["Agregar bioadhesivo con condroitin sulfato","Cambiar a Tegoprazan","Agregar famotidina nocte y procinético","Funduplicatura"], ans:1 },
+        { pts:500, q:"Mujer 22 años, 8 meses con regurgitación postprandial, sin pirosis, vómitos ni síntomas nocturnos. IBP bid 2 meses sin respuesta. pH-impedancia: TEA 4%, reflujo no ácido postprandial, IS y PAS positivos. ¿Cuál es su conducta?", opts:["Cambiar a P-CAB","Respiración diafragmática y biofeedback","Neuromodulador","Funduplicatura"], ans:1 },
+      ]},
+      { name: "Tego + H. pylori", questions: [
+        { pts:100, q:"¿En cuáles desenlaces Tegoprazan fue significativamente superior a pantoprazol en ERGE en ECC hecho en México?", opts:["Menor frecuencia de pirosis a la semana","Mejoría del GERD-HRQL a los 7 días","Tasa de cicatrización de esofagitis a las 4 semanas","Todas"], ans:3 },
+        { pts:200, q:"En esquemas con tegoprazan, ¿cuál es el efecto más importante para conseguir mayores tasas de erradicación de H. pylori?", opts:["Mantener pH intragástrico >6 desde la primera dosis","Acción bactericida","Menor interacción fármaco-fármaco con antibióticos","Disminuye la fase replicativa del H. pylori"], ans:0 },
+        { pts:300, q:"Hombre que vive en Tabasco con úlcera gástrica H.p positiva. ¿Cuál es su conducta considerando efectividad y eventos adversos?", opts:["Dual: TEGO + AMO dosis altas 14 d","Concomitante: TEGO + AMO + CLA + METRO 14 d","Secuencial: IBP + AMO + CLA + METRO 14 d","Cuádruple: TEGO + BIS + DOXI + METRO 14 d"], ans:0 },
+        { pts:400, q:"Las siguientes son indicaciones emergentes de Tegoprazan con evidencia científica, EXCEPTO:", opts:["Esófago de Barrett","Úlceras inducidas por endoscopia (EMR, ESD)","Manifestaciones extraesofágicas de ERGE","Hemorragia de tubo digestivo alto no variceal"], ans:0 },
+        { pts:500, q:"Hombre con úlcera gástrica Hp positiva. Tratado con IBP, AMO, CLA 14 días. Prueba de aliento al mes positiva. ¿Cuál es su conducta?", opts:["Dual: TEGO + AMO dosis altas 14 d","Concomitante: TEGO + AMO + CLA + METRO 14 d","Secuencial: IBP + AMO + CLA + METRO 14 d","Cuádruple: TEGO + BIS + DOXI + METRO 14 d"], ans:3 },
+      ]},
+      { name: "Fibra / Estreñimiento", questions: [
+        { pts:100, q:"Mujer 33 años, evacuaciones en escíbalos, pujo excesivo y evacuación incompleta. MAR: presiones normales. Con el pujo, aumento de presión del esfínter anal. ¿Cuál es la mejor conducta?", opts:["Fibra soluble","Biofeedback","Laxantes osmóticos","Prucaloprida"], ans:1 },
+        { pts:200, q:"Mujer 45 años con estreñimiento de 18 meses, evacua cada 3-5 días sin laxantes, distensión abdominal. Tránsito >72 hs; MAR normal. ¿Cuál es el mecanismo fisiopatológico más probable?", opts:["Ausencia de reflejo rectoanal inhibitorio","Disinergia defecatoria","Disminución de contracciones gigantes migratorias","Hipersensibilidad visceral"], ans:2 },
+        { pts:300, q:"¿Cuáles son las características fisicoquímicas ideales de una fibra para el tratamiento del estreñimiento?", opts:["Fibra soluble, no fermentable, viscosa","Fibra insoluble, fermentable, viscosa","Fibra soluble, poco fermentable, no viscosa","Fibra insoluble, no fermentable, no viscosa"], ans:0 },
+        { pts:400, q:"Fibra que es poco efectiva y produce distensión y meteorismo en pacientes con estreñimiento crónico funcional:", opts:["Psyllium plantago","Ispágula","Salvado de trigo","Metilcelulosa"], ans:2 },
+        { pts:500, q:"Hombre 62 años, estreñimiento crónico desde los 25 años. 2 pastillas de psyllium/día sin mejoría. Tránsito con marcadores: toda la actividad en colon derecho. MAR normal. ¿Cuál es su conducta?", opts:["Incrementar dosis de psyllium","Prucaloprida","Macrogol","Biofeedback"], ans:1 },
+      ]},
+      { name: "Microbiota / Estreñimiento", questions: [
+        { pts:100, q:"¿Cuál es la composición de la microbiota fecal en pacientes con estreñimiento crónico?", opts:["Aumento de Firmicutes exclusivamente","Disbiosis con reducción de la diversidad microbiana","Ausencia de bacterias anaerobias","Disminución de arqueas"], ans:1 },
+        { pts:200, q:"¿Cuál es un postbiótico con evidencia clínica robusta en el manejo de la diarrea aguda en niños?", opts:["Proteína Amuc_1100 de Akkermansia muciniphila","Butirato","S. boulardii inactivado","Lactobacillus LB inactivado"], ans:3 },
+        { pts:300, q:"¿Cuál es el microorganismo productor de metano asociado a estreñimiento?", opts:["Enterococo faecium","Escherichia coli","Methanobrevibacter smithii","Faecalobacterium prausnitzii"], ans:2 },
+        { pts:400, q:"¿En qué condición los probióticos pueden ser útiles en el manejo del estreñimiento crónico funcional?", opts:["En estreñimiento leve","En estreñimiento refractario","En disinergia defecatoria","En inercia colónica"], ans:0 },
+        { pts:500, q:"Hombre 25 años, estreñimiento crónico desde la infancia. Colon por enema: zona de transición en rectosigmoides. ¿Cuál es el hallazgo en la MAR?", opts:["Contracción paradójica del puborrectal","Incremento de ondas lentas en reposo","Ausencia de reflejo rectoanal inhibitorio","Hiposensibilidad rectal"], ans:2 },
+      ]},
+    ]
+  },
+  {
+    name: "Módulo 2: Microbiota + SII",
+    categories: [
+      { name: "Microbiota en SII", questions: [
+        { pts:100, q:"¿Cuál de los siguientes es el mejor ejemplo de un prebiótico?", opts:["Lactobacillus rhamnosus","Inulina","Butirato","Bifidobacterium longum"], ans:1 },
+        { pts:200, q:"¿Cuál es el efecto más consistente de los probióticos en el SII?", opts:["Erradicación de patógenos específicos","Mejora global de síntomas y calidad de vida","Normalización del tránsito intestinal","Restauración completa de la eubiosis"], ans:1 },
+        { pts:300, q:"¿Cuál de las siguientes afirmaciones sobre la microbiota en SII es más precisa?", opts:["Siempre hay disminución de Lactobacillus","Existe disbiosis pero sin patrón universal consistente","La microbiota es idéntica en todos los subtipos de SII","El trasplante de microbiota fecal es tratamiento de primera línea"], ans:1 },
+        { pts:400, q:"¿Cuál es el mecanismo por el que el eje intestino-cerebro participa en el SII?", opts:["Solo vía nervio vago aferente","Únicamente por señales hormonales sistémicas","Integración bidireccional de señales neurales, inmunes y endocrinas","Exclusivamente por producción de serotonina en el SNC"], ans:2 },
+        { pts:500, q:"¿Cuál es el rol de los ácidos grasos de cadena corta (AGCC) en el SII?", opts:["Son siempre proinflamatorios en el SII","Modulan la motilidad, permeabilidad y respuesta inmune intestinal","Solo tienen efecto sobre el colon derecho","Su producción está aumentada en todos los subtipos de SII"], ans:1 },
+      ]},
+      { name: "SII / Fisiopatología", questions: [
+        { pts:100, q:"¿Cuáles son los criterios de Roma IV para SII?", opts:["Dolor abdominal crónico sin cambio en evacuaciones","Dolor abdominal recurrente ≥1 día/semana en últimos 3 meses, con ≥2 criterios relacionados con defecación","Diarrea crónica sin dolor abdominal","Distensión abdominal sin dolor"], ans:1 },
+        { pts:200, q:"¿Cuál es el término correcto para la sensación exacerbada ante distensión rectal en SII, que se presenta a volúmenes menores que en sujetos sanos?", opts:["Alodinia mecánica","Hipersensibilidad visceral","Sensibilización central","Nocicepción exacerbada"], ans:1 },
+        { pts:300, q:"Los siguientes son mecanismos fisiopatológicos en SII, EXCEPTO:", opts:["Infección gastrointestinal","Disbiosis","Autoinmunidad","Intolerancias alimentarias"], ans:2 },
+        { pts:400, q:"En relación a la permeabilidad intestinal alterada en SII, ¿cuál opción es la más consistente con los estudios clínicos?", opts:["La prueba lactulosa/manitol aumentada es concluyente","Ocurre en la mayoría de los subtipos de SII","Es un mecanismo fisiopatológico que puede ocurrir en el SII","Los probióticos corrigen el problema por incremento de expresión de ocludina"], ans:2 },
+        { pts:500, q:"¿En qué porcentaje de pacientes con SII-D la diarrea por sales biliares es responsable de los síntomas?", opts:["Menos del 10%","En el 20 al 40%","En la mitad de los casos","En >60%"], ans:1 },
+      ]},
+      { name: "SII / Tratamiento", questions: [
+        { pts:100, q:"¿Qué tipo de dieta tiene la evidencia de mejor calidad en el manejo del SII?", opts:["Dieta mediterránea","Dieta NICE","Dieta baja en FODMAP","Dieta sin gluten"], ans:2 },
+        { pts:200, q:"¿Mecanismo de acción de la dieta baja en FODMAP en SII?", opts:["Disminuye la fermentación bacteriana y el efecto osmótico de la dieta","Efecto antiinflamatorio","Incremento de bifidobacterias en la microbiota intestinal","Mejora la permeabilidad intestinal"], ans:0 },
+        { pts:300, q:"¿Cuáles son los fármacos de primera línea para el manejo del dolor en SII?", opts:["Antidepresivos tricíclicos","Opiáceos","Antiespasmódicos","Ligandos alfa 2 delta"], ans:2 },
+        { pts:400, q:"¿Cuáles son los efectos del uso de alfa-galactosidasa en el manejo del SII?", opts:["Mejora el dolor abdominal","Mejora la distensión y el meteorismo","Mejora la frecuencia y características de las evacuaciones","Produce mejoría global del SII"], ans:1 },
+        { pts:500, q:"¿Cuál de los siguientes fármacos es agonista de opiáceos, inhibidor de canales de calcio y bloqueador de canales de potasio en el intestino?", opts:["Eluxalodina","Mebeverina","Trimebutina","Plecanatida"], ans:2 },
+      ]},
+      { name: "SII / Neuromoduladores", questions: [
+        { pts:100, q:"Neuromodulador de primera elección en pacientes con SII-D:", opts:["Duloxetina","Imipramina","Quetiapina","Pregabalina"], ans:1 },
+        { pts:200, q:"Neuromodulador que debe evitarse en pacientes con SII-E:", opts:["Paroxetina","Escitalopram","Venlafaxina","Sertralina"], ans:0 },
+        { pts:300, q:"Neuromodulador alternativo para manejo del dolor en pacientes que no toleran los tricíclicos:", opts:["Sertralina","Desvenlafaxina","Duloxetina","Mirtazapina"], ans:2 },
+        { pts:400, q:"¿Por qué funcionan los neuromoduladores en los TIIC?", opts:["Son analgésicos viscerales","Mejoran la psicomorbilidad asociada","Favorecen la neurogénesis","Todas"], ans:3 },
+        { pts:500, q:"Clase de neuromoduladores asociados a mayor riesgo de hemorragia de tubo digestivo:", opts:["Tricíclicos","Inhibidores de recaptura de serotonina y noradrenalina","Azapironas","Inhibidores selectivos de la recaptura de serotonina"], ans:3 },
+      ]},
+      { name: "SII / Manejo", questions: [
+        { pts:100, q:"Son terapias psicológicas efectivas en pacientes con SII, EXCEPTO:", opts:["Hipnosis","Terapia cognitivo conductual","Moxibustión","Mindfulness asistida por computadora"], ans:2 },
+        { pts:200, q:"Mujer 32 años, dolor que alivia con la defecación, evacuaciones Bristol 2, distensión objetiva y meteorismo. Sin signos de alarma. ¿Cuál es su conducta?", opts:["Dieta NICE + bromuro de pinaverio + respiración diafragmática","Dieta baja en FODMAP + trimebutina con simeticona + ejercicios hipopresivos","Dieta baja en gluten + alverina con simeticona + respiración diafragmática","Dieta baja en FODMAP + Loperamida + sertralina"], ans:1 },
+        { pts:300, q:"Mujer 20 años, dolor abdominal, evacuaciones Bristol 1 cada 4 días, pujo excesivo. Tránsito lento; MAR con aumento de presión esfinteriana con el esfuerzo. ¿Cuál es su conducta?", opts:["Linaclotida + biofeedback","Prucaloprida + macrogol","Incremento de fibra dietaria + biofeedback","Menta piperita + macrogol"], ans:0 },
+        { pts:400, q:"Hombre 35 años, dolor abdominal con las evacuaciones, diarrea Bristol 7, distensión objetiva postprandial. Pobre respuesta a loperamida y antiespasmódicos. ¿Qué prescribe?", opts:["Dieta baja en FODMAP + Carbón activado + lidamidina","Dieta NICE + Colestiramina","Dieta baja en FODMAP + Rifaximina","Dieta mediterránea + Probióticos"], ans:2 },
+        { pts:500, q:"Mujer 41 años, dolor abdominal 1.5 años no asociado a la evacuación, cirugías previas. Multitratada sin mejoría. Comorbilidades: cefalea, ataques de pánico, cistitis intersticial. ¿Cuál es su recomendación?", opts:["Parches de buprenorfina para el dolor","Tricíclico + terapia cognitivo conductual","Interconsulta con algólogo","Respiración diafragmática + venlafaxina"], ans:1 },
+      ]},
+    ]
+  }
+];
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+const state = {
+  moduleIdx: 0,
+  role: null,
+  playerName: '',
+  playerScore: 0,
+  usedCells: new Set(),
+  currentQ: null,
+  timerVal: 20,
+  timerInterval: null,
+  revealed: false,
+  prevScreen: 'board',
+  playerAnswered: false,
+  playerAnswerTime: 0,
+  playerQuestionStart: 0,
+  playerLastChosenIdx: -1,
+  playerLastQPts: 0,
+};
+// ════════════════════════════════════════════
+// FIREBASE
+// ════════════════════════════════════════════
+let db = null;
+let gameRef = null;
+let scoresRef = null;
+const FB_STORAGE_KEY = 'jeopardy_fb_config';
+function loadSavedConfig() {
+  try {
+    const raw = localStorage.getItem(FB_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) { return null; }
+}
+function goSetup() {
+  const saved = loadSavedConfig();
+  if (saved) {
+    document.getElementById('fb-apikey').value = saved.apiKey || '';
+    document.getElementById('fb-authdomain').value = saved.authDomain || '';
+    document.getElementById('fb-dburl').value = saved.databaseURL || '';
+    document.getElementById('fb-projectid').value = saved.projectId || '';
+  }
+  showScreen('setup');
+}
+function initFirebase() {
+  const apiKey = document.getElementById('fb-apikey').value.trim();
+  const authDomain = document.getElementById('fb-authdomain').value.trim();
+  const databaseURL = document.getElementById('fb-dburl').value.trim();
+  const projectId = document.getElementById('fb-projectid').value.trim();
+  if (!apiKey || !databaseURL || !projectId) {
+    alert('Por favor completa al menos: API Key, Database URL y Project ID.');
+    return;
+  }
+  const config = { apiKey, authDomain, databaseURL, projectId };
+  localStorage.setItem(FB_STORAGE_KEY, JSON.stringify(config));
+  try {
+    if (firebase.apps.length === 0) {
+      firebase.initializeApp(config);
+    }
+    db = firebase.database();
+    gameRef = db.ref('game');
+    scoresRef = db.ref('scores');
+    setConnStatus('connected', '🟢 Firebase conectado');
+    goMC();
+  } catch(e) {
+    alert('Error al conectar Firebase: ' + e.message);
+    setConnStatus('error', '🔴 Error Firebase');
+  }
+}
+function tryAutoConnect() {
+  const saved = loadSavedConfig();
+  if (!saved || !saved.databaseURL) return false;
+  try {
+    if (firebase.apps.length === 0) {
+      firebase.initializeApp(saved);
+    }
+    db = firebase.database();
+    gameRef = db.ref('game');
+    scoresRef = db.ref('scores');
+    setConnStatus('connected', '🟢 Firebase');
+    return true;
+  } catch(e) {
+    setConnStatus('error', '🔴 Firebase error');
+    return false;
+  }
+}
+function setConnStatus(cls, text) {
+  const el = document.getElementById('conn-status');
+  el.className = cls;
+  el.textContent = text;
+}
+// ════════════════════════════════════════════
+// FIREBASE BROADCAST / LISTEN
+// ════════════════════════════════════════════
+function fbBroadcast(data) {
+  if (!gameRef) return;
+  gameRef.set({ ...data, ts: firebase.database.ServerValue.TIMESTAMP });
+}
+function fbListenGame(callback) {
+  if (!gameRef) return;
+  gameRef.on('value', snap => {
+    const val = snap.val();
+    if (val) callback(val);
+  });
+}
+function fbSaveScore(name, pts) {
+  if (!scoresRef) {
+    // Fallback to localStorage
+    lsSaveScore(name, pts);
+    return;
+  }
+  const key = name.replace(/[.#$/[\]]/g, '_');
+  scoresRef.child(key).transaction(current => {
+    if (current === null) return { name, pts };
+    return { name: current.name, pts: (current.pts || 0) + pts };
+  });
+}
+function fbListenScores(callback) {
+  if (!scoresRef) {
+    callback(lsGetScores());
+    return;
+  }
+  scoresRef.on('value', snap => {
+    const val = snap.val();
+    if (!val) { callback([]); return; }
+    const arr = Object.values(val).sort((a, b) => b.pts - a.pts);
+    callback(arr);
+  });
+}
+function fbResetScores() {
+  if (!scoresRef) { localStorage.removeItem('jeopardy_scores'); return; }
+  scoresRef.remove();
+}
+// localStorage fallback
+function lsGetScores() {
+  try { return JSON.parse(localStorage.getItem('jeopardy_scores') || '[]'); } catch(e) { return []; }
+}
+function lsSaveScore(name, pts) {
+  const scores = lsGetScores();
+  const ex = scores.find(s => s.name === name);
+  if (ex) ex.pts += pts; else scores.push({ name, pts });
+  scores.sort((a, b) => b.pts - a.pts);
+  localStorage.setItem('jeopardy_scores', JSON.stringify(scores));
+}
+// ════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+function selectModule(idx) {
+  state.moduleIdx = idx;
+  document.querySelectorAll('.mod-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+}
+function goMC() {
+  state.role = 'mc';
+  state.usedCells = new Set();
+  // Listen for response count updates while MC is on question screen
+  renderBoard();
+  showScreen('board');
+}
+function goPlayer() {
+  document.getElementById('overlay-name').classList.add('show');
+}
+function confirmName() {
+  const name = document.getElementById('name-input').value.trim();
+  if (!name) { alert('Por favor escribe tu nombre'); return; }
+  state.playerName = name;
+  state.playerScore = 0;
+  document.getElementById('overlay-name').classList.remove('show');
+  document.getElementById('player-name-display').textContent = name;
+  document.getElementById('player-module-display').textContent = MODULES[state.moduleIdx].name;
+  document.getElementById('player-pts-display').textContent = '0 pts';
+  state.role = 'player';
+  showScreen('player');
+  startPlayerListening();
+}
+// ════════════════════════════════════════════
+// BOARD
+// ════════════════════════════════════════════
+function renderBoard() {
+  const mod = MODULES[state.moduleIdx];
+  document.getElementById('board-module-label').textContent = mod.name;
+  const grid = document.getElementById('board-grid');
+  grid.innerHTML = '';
+  mod.categories.forEach(cat => {
+    const h = document.createElement('div');
+    h.className = 'cat-header';
+    h.textContent = cat.name;
+    grid.appendChild(h);
+  });
+  for (let qi = 0; qi < 5; qi++) {
+    for (let ci = 0; ci < 5; ci++) {
+      const q = mod.categories[ci].questions[qi];
+      const key = `${ci}-${qi}`;
+      const cell = document.createElement('div');
+      cell.className = 'cell' + (state.usedCells.has(key) ? ' used' : '');
+      cell.innerHTML = `<span class="pts">${q.pts}</span>`;
+      cell.onclick = () => openQuestion(ci, qi);
+      grid.appendChild(cell);
+    }
+  }
+}
+// ════════════════════════════════════════════
+// QUESTION (MC)
+// ════════════════════════════════════════════
+function openQuestion(catIdx, qIdx) {
+  const mod = MODULES[state.moduleIdx];
+  const cat = mod.categories[catIdx];
+  const q = cat.questions[qIdx];
+  state.currentQ = { catIdx, qIdx };
+  state.revealed = false;
+  document.getElementById('q-cat-label').textContent = cat.name;
+  document.getElementById('q-pts-label').textContent = q.pts + ' pts';
+  document.getElementById('q-text-display').textContent = q.q;
+  document.getElementById('btn-reveal').style.display = 'inline-block';
+  document.getElementById('response-count').textContent = '0';
+  const optsEl = document.getElementById('q-options');
+  optsEl.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('div');
+    btn.className = 'opt-btn';
+    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span>${esc(opt)}`;
+    btn.id = `opt-mc-${i}`;
+    optsEl.appendChild(btn);
+  });
+  // Broadcast question to all players
+  fbBroadcast({ type: 'question', moduleIdx: state.moduleIdx, catIdx, qIdx, timeLimit: 20 });
+  // Listen for responses count
+  listenResponseCount(catIdx, qIdx);
+  startTimer(20);
+  showScreen('question');
+}
+let responseCountRef = null;
+function listenResponseCount(catIdx, qIdx) {
+  if (responseCountRef) responseCountRef.off();
+  if (!db) return;
+  responseCountRef = db.ref(`responses/${catIdx}_${qIdx}`);
+  responseCountRef.on('value', snap => {
+    const val = snap.val();
+    const count = val ? Object.keys(val).length : 0;
+    const el = document.getElementById('response-count');
+    if (el) el.textContent = count;
+  });
+}
+function revealAnswer() {
+  if (state.revealed) return;
+  state.revealed = true;
+  clearTimer();
+  if (responseCountRef) responseCountRef.off();
+  const mod = MODULES[state.moduleIdx];
+  const { catIdx, qIdx } = state.currentQ;
+  const q = mod.categories[catIdx].questions[qIdx];
+  q.opts.forEach((_, i) => {
+    const el = document.getElementById(`opt-mc-${i}`);
+    if (el) el.classList.add(i === q.ans ? 'correct' : 'wrong');
+  });
+  document.getElementById('btn-reveal').style.display = 'none';
+  state.usedCells.add(`${catIdx}-${qIdx}`);
+  fbBroadcast({ type: 'reveal', catIdx, qIdx, ans: q.ans });
+}
+function backToBoard() {
+  clearTimer();
+  if (state.currentQ && !state.revealed) revealAnswer();
+  renderBoard();
+  fbBroadcast({ type: 'idle' });
+  showScreen('board');
+}
+function resetBoard() {
+  if (!confirm('¿Reiniciar tablero y marcador?')) return;
+  state.usedCells = new Set();
+  fbResetScores();
+  fbBroadcast({ type: 'idle' });
+  renderBoard();
+}
+// ════════════════════════════════════════════
+// TIMER
+// ════════════════════════════════════════════
+function startTimer(secs) {
+  clearTimer();
+  state.timerVal = secs;
+  updateTimerUI();
+  state.timerInterval = setInterval(() => {
+    state.timerVal--;
+    updateTimerUI();
+    if (state.timerVal <= 0) { clearTimer(); if (!state.revealed) revealAnswer(); }
+  }, 1000);
+}
+function clearTimer() {
+  if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
+}
+function updateTimerUI() {
+  const d = document.getElementById('timer-display');
+  const b = document.getElementById('timer-bar');
+  if (!d || !b) return;
+  const pct = (state.timerVal / 20) * 100;
+  d.textContent = state.timerVal;
+  b.style.width = pct + '%';
+  const color = state.timerVal > 10 ? 'var(--gold)' : state.timerVal > 5 ? '#E67E22' : '#E74C3C';
+  b.style.background = color;
+  d.style.color = color;
+}
+// ════════════════════════════════════════════
+// SCOREBOARD
+// ════════════════════════════════════════════
+let scoresListener = null;
+function showScores() {
+  state.prevScreen = document.querySelector('.screen.active')?.id?.replace('screen-','') || 'board';
+  showScreen('scores');
+  if (scoresListener) return;
+  fbListenScores(renderScores);
+}
+function backFromScores() { showScreen(state.prevScreen); }
+function renderScores(scores) {
+  const el = document.getElementById('score-table');
+  if (!scores || scores.length === 0) {
+    el.innerHTML = '<p style="text-align:center;color:var(--dim);margin-top:2rem;">Sin puntuaciones aún.<br>Los participantes deben entrar como jugadores.</p>';
+    return;
+  }
+  const medals = ['🥇','🥈','🥉'];
+  const rankCls = ['g','s','b'];
+  el.innerHTML = scores.slice(0, 25).map((s, i) => `
+    <div class="score-row">
+      <div class="score-rank ${rankCls[i]||''}">${medals[i]||(i+1)}</div>
+      <div class="score-name">${esc(s.name)}</div>
+      <div class="score-pts">${s.pts} pts</div>
+    </div>`).join('');
+}
+// ════════════════════════════════════════════
+// QR CODE
+// ════════════════════════════════════════════
+let qrGenerated = false;
+function showQR() {
+  const url = window.location.href.split('?')[0];
+  document.getElementById('qr-url-display').textContent = url;
+  if (!qrGenerated) {
+    const container = document.getElementById('qr-container');
+    container.innerHTML = '';
+    try {
+      new QRCode(container, {
+        text: url,
+        width: 220,
+        height: 220,
+        colorDark: '#0A1628',
+        colorLight: '#FFFFFF',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+      qrGenerated = true;
+    } catch(e) {
+      container.innerHTML = `<p style="color:#333;font-family:monospace;font-size:0.75rem;max-width:220px;">${url}</p>`;
+    }
+  }
+  showScreen('qr');
+}
+function copyJoinUrl() {
+  const url = window.location.href.split('?')[0];
+  navigator.clipboard.writeText(url).then(() => alert('URL copiada al portapapeles')).catch(() => alert(url));
+}
+// ════════════════════════════════════════════
+// PLAYER LOGIC
+// ════════════════════════════════════════════
+let playerGameListener = null;
+let playerClientTimerInterval = null;
+let playerTimerStart = 0;
+let playerTimerLimit = 20;
+function startPlayerListening() {
+  if (playerGameListener) return;
+  fbListenGame(handleGameEvent);
+}
+function handleGameEvent(data) {
+  if (data.type === 'question') {
+    if (data.moduleIdx !== state.moduleIdx) return;
+    state.playerAnswered = false;
+    state.playerQuestionStart = Date.now();
+    playerTimerLimit = data.timeLimit || 20;
+    playerTimerStart = Date.now();
+    renderPlayerQuestion(data.catIdx, data.qIdx);
+    startPlayerClientTimer(data.timeLimit || 20);
+  } else if (data.type === 'reveal') {
+    stopPlayerClientTimer();
+    showPlayerReveal(data.ans);
+  } else if (data.type === 'idle') {
+    stopPlayerClientTimer();
+    showPlayerIdle();
+  }
+}
+function startPlayerClientTimer(secs) {
+  stopPlayerClientTimer();
+  let val = secs;
+  updatePlayerTimerBar(val, secs);
+  playerClientTimerInterval = setInterval(() => {
+    val--;
+    updatePlayerTimerBar(val, secs);
+    if (val <= 0) stopPlayerClientTimer();
+  }, 1000);
+}
+function stopPlayerClientTimer() {
+  if (playerClientTimerInterval) { clearInterval(playerClientTimerInterval); playerClientTimerInterval = null; }
+}
+function updatePlayerTimerBar(val, max) {
+  const b = document.getElementById('player-timer-bar');
+  if (!b) return;
+  const pct = Math.max(0, (val / max) * 100);
+  b.style.width = pct + '%';
+  b.style.background = val > 10 ? 'var(--gold)' : val > 5 ? '#E67E22' : '#E74C3C';
+}
+function renderPlayerQuestion(catIdx, qIdx) {
+  const mod = MODULES[state.moduleIdx];
+  const q = mod.categories[catIdx].questions[qIdx];
+  const letters = ['A','B','C','D'];
+  document.getElementById('player-content').innerHTML = `
+    <div class="player-q-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.9rem;">
+        <div style="font-size:0.72rem;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;">${esc(mod.categories[catIdx].name)}</div>
+        <div style="background:var(--gold);color:var(--navy);font-weight:bold;padding:0.18rem 0.6rem;border-radius:12px;font-size:0.82rem;">${q.pts} pts</div>
+      </div>
+      <div class="player-timer-bar-wrap"><div class="player-timer-bar" id="player-timer-bar" style="width:100%"></div></div>
+      <div class="player-q-text">${esc(q.q)}</div>
+      <div class="player-opts">
+        ${q.opts.map((opt, i) => `
+          <button class="player-opt" id="popt-${i}" onclick="playerAnswer(${catIdx},${qIdx},${i})">
+            <strong>${letters[i]}.</strong> ${esc(opt)}
+          </button>`).join('')}
+      </div>
+      <div id="player-feedback"></div>
+    </div>`;
+}
+function playerAnswer(catIdx, qIdx, chosenIdx) {
+  if (state.playerAnswered) return;
+  state.playerAnswered = true;
+  state.playerAnswerTime = (Date.now() - state.playerQuestionStart) / 1000;
+  state.playerLastChosenIdx = chosenIdx;
+  state.playerLastQPts = MODULES[state.moduleIdx].categories[catIdx].questions[qIdx].pts;
+  document.querySelectorAll('.player-opt').forEach(b => b.disabled = true);
+  const chosen = document.getElementById(`popt-${chosenIdx}`);
+  if (chosen) chosen.classList.add('selected');
+  // Write response to Firebase so MC sees count
+  if (db) {
+    const key = state.playerName.replace(/[.#$/[\]]/g, '_') + '_' + Date.now();
+    db.ref(`responses/${catIdx}_${qIdx}/${key}`).set({
+      name: state.playerName,
+      chosen: chosenIdx,
+      time: state.playerAnswerTime
+    });
+  }
+}
+function showPlayerReveal(correctAns) {
+  const letters = ['A','B','C','D'];
+  document.querySelectorAll('.player-opt').forEach((b, i) => {
+    b.classList.add(i === correctAns ? 'correct' : 'wrong');
+  });
+  const feedback = document.getElementById('player-feedback');
+  if (!feedback) return;
+  if (!state.playerAnswered) {
+    feedback.innerHTML = '<div class="feedback-msg slow">⏱ No respondiste a tiempo</div>';
+    return;
+  }
+  const correct = state.playerLastChosenIdx === correctAns;
+  if (correct) {
+    const maxPts = state.playerLastQPts || 100;
+    const speedBonus = Math.max(0, Math.floor(maxPts * (1 - (state.playerAnswerTime / 20))));
+    const earned = Math.max(Math.floor(maxPts * 0.2), speedBonus);
+    state.playerScore += earned;
+    document.getElementById('player-pts-display').textContent = state.playerScore + ' pts';
+    fbSaveScore(state.playerName, earned);
+    feedback.innerHTML = `<div class="feedback-msg correct">✓ ¡Correcto! +${earned} pts <span style="opacity:0.7;font-size:0.85rem;">(${state.playerAnswerTime.toFixed(1)}s)</span></div>`;
+  } else {
+    feedback.innerHTML = `<div class="feedback-msg wrong">✗ Incorrecto — Respuesta: ${letters[correctAns]}</div>`;
+  }
+}
+function showPlayerIdle() {
+  document.getElementById('player-content').innerHTML = `
+    <div class="player-waiting">
+      <span class="dot"></span> Conectado — esperando pregunta…<br>
+      <span style="font-size:0.82rem;color:var(--dim);">El MC activará la siguiente ronda</span><br><br>
+      <button class="btn-sm" style="background:var(--navy-card);color:var(--gold-light);border:1px solid var(--gold);" onclick="showScores()">🏆 Ver marcador</button>
+    </div>`;
+}
+// ════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════
+function esc(str) {
+  const d = document.createElement('div');
+  d.appendChild(document.createTextNode(String(str)));
+  return d.innerHTML;
+}
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+window.addEventListener('load', () => {
+  document.getElementById('overlay-name').classList.remove('show');
+  // Check if URL has ?player param — auto show player mode
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('mode') === 'player') {
+    // Try auto-connect with saved config
+    const connected = tryAutoConnect();
+    if (connected) {
+      goPlayer();
+    }
+  }
+});
+</script>
+</body>
+</html>
