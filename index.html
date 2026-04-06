@@ -440,7 +440,7 @@ body {
     </div>
   </div>
   <div class="landing-footer">
-    <span class="footer-brand" id="mc-trigger" onclick="handleMcTap()">@PolarMultimedia2026</span>
+    <span class="footer-brand">@PolarMultimedia<span id="mc-trigger" onclick="handleMcTap()">2026</span></span>
   </div>
 </div>
 <!-- ═══════════════════════════════════
@@ -557,8 +557,14 @@ body {
      QR SCREEN
 ═══════════════════════════════════ -->
 <div id="screen-qr" class="screen">
-  <div style="font-size:1.5rem;color:var(--gold-light);margin-bottom:0.5rem;">📱 Únete al juego</div>
-  <p style="color:var(--dim);font-size:0.9rem;margin-bottom:1rem;">Escanea con la cámara de tu teléfono</p>
+  <div style="font-size:1.1rem;font-weight:800;color:var(--gold-light);margin-bottom:0.25rem;letter-spacing:0.12em;text-transform:uppercase;">📱 QR de acceso</div>
+  <p style="color:var(--dim);font-size:0.82rem;margin-bottom:1.1rem;">Muestra este QR a los participantes</p>
+  <!-- Selector de módulo -->
+  <div style="display:flex;gap:0.5rem;margin-bottom:1.2rem;">
+    <button id="qr-mod-btn-0" class="mod-btn active" onclick="switchQR(0)">Módulo 1</button>
+    <button id="qr-mod-btn-1" class="mod-btn" onclick="switchQR(1)">Módulo 2</button>
+  </div>
+  <div id="qr-module-label" style="font-size:0.75rem;color:var(--gold);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.8rem;"></div>
   <div class="qr-box" id="qr-container"></div>
   <div id="qr-url-display"></div>
   <div style="margin-top:1.5rem;display:flex;gap:0.75rem;flex-wrap:wrap;justify-content:center;">
@@ -598,7 +604,7 @@ const MODULES = [
         { pts:400, q:"Hombre 55 años con esofagitis C y hernia hiatal de 2 cm, en esomeprazol bid por 2 meses y síntomas persistentes. Erosiones confluentes 50% circunferencia. Manometría con aperistalsis. ¿Cuál es su conducta?", opts:["Agregar bioadhesivo con condroitin sulfato","Cambiar a Tegoprazan","Agregar famotidina nocte y procinético","Funduplicatura"], ans:1 },
         { pts:500, q:"Mujer 22 años, 8 meses con regurgitación postprandial, sin pirosis, vómitos ni síntomas nocturnos. IBP bid 2 meses sin respuesta. pH-impedancia: TEA 4%, reflujo no ácido postprandial, IS y PAS positivos. ¿Cuál es su conducta?", opts:["Cambiar a P-CAB","Respiración diafragmática y biofeedback","Neuromodulador","Funduplicatura"], ans:1 },
       ]},
-      { name: "Tego + H. pylori", questions: [
+      { name: "Tego evidencias/H. pylori", questions: [
         { pts:100, q:"¿En cuáles desenlaces Tegoprazan fue significativamente superior a pantoprazol en ERGE en ECC hecho en México?", opts:["Menor frecuencia de pirosis a la semana","Mejoría del GERD-HRQL a los 7 días","Tasa de cicatrización de esofagitis a las 4 semanas","Todas"], ans:3 },
         { pts:200, q:"En esquemas con tegoprazan, ¿cuál es el efecto más importante para conseguir mayores tasas de erradicación de H. pylori?", opts:["Mantener pH intragástrico >6 desde la primera dosis","Acción bactericida","Menor interacción fármaco-fármaco con antibióticos","Disminuye la fase replicativa del H. pylori"], ans:0 },
         { pts:300, q:"Hombre que vive en Tabasco con úlcera gástrica H.p positiva. ¿Cuál es su conducta considerando efectividad y eventos adversos?", opts:["Dual: TEGO + AMO dosis altas 14 d","Concomitante: TEGO + AMO + CLA + METRO 14 d","Secuencial: IBP + AMO + CLA + METRO 14 d","Cuádruple: TEGO + BIS + DOXI + METRO 14 d"], ans:0 },
@@ -988,30 +994,45 @@ function renderScores(scores) {
 // ════════════════════════════════════════════
 let qrGenerated = false;
 const GAME_URL = 'https://robcarpinteyro.github.io/jeopardy-carnot/';
+let qrCurrentModule = 0;
+
+function moduleUrl(idx) {
+  return GAME_URL + '?module=' + idx;
+}
+
 function showQR() {
-  const url = GAME_URL;
-  document.getElementById('qr-url-display').textContent = url;
-  if (!qrGenerated) {
-    const container = document.getElementById('qr-container');
-    container.innerHTML = '';
-    try {
-      new QRCode(container, {
-        text: url,
-        width: 240,
-        height: 240,
-        colorDark: '#0A1628',
-        colorLight: '#FFFFFF',
-        correctLevel: QRCode.CorrectLevel.M
-      });
-      qrGenerated = true;
-    } catch(e) {
-      container.innerHTML = `<p style="color:#333;font-family:monospace;font-size:0.75rem;max-width:240px;">${url}</p>`;
-    }
-  }
+  qrCurrentModule = state.moduleIdx;
+  renderQR(qrCurrentModule);
   showScreen('qr');
 }
+
+function switchQR(idx) {
+  qrCurrentModule = idx;
+  document.querySelectorAll('#screen-qr .mod-btn').forEach((b,i) => b.classList.toggle('active', i === idx));
+  renderQR(idx);
+}
+
+function renderQR(idx) {
+  const url = moduleUrl(idx);
+  const labels = ['Módulo 1 — Reflujo + Estreñimiento', 'Módulo 2 — Microbiota + SII'];
+  document.getElementById('qr-module-label').textContent = labels[idx];
+  document.getElementById('qr-url-display').textContent = url;
+  const container = document.getElementById('qr-container');
+  container.innerHTML = '';
+  try {
+    new QRCode(container, {
+      text: url, width: 240, height: 240,
+      colorDark: '#0A1628', colorLight: '#FFFFFF',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } catch(e) {
+    container.innerHTML = `<p style="color:#333;font-family:monospace;font-size:0.72rem;max-width:240px;word-break:break-all;">${url}</p>`;
+  }
+}
+
 function copyJoinUrl() {
-  navigator.clipboard.writeText(GAME_URL).then(() => alert('URL copiada al portapapeles')).catch(() => alert(GAME_URL));
+  const url = moduleUrl(qrCurrentModule);
+  navigator.clipboard.writeText(url).then(() => alert('URL copiada al portapapeles')).catch(() => alert(url));
 }
 // ════════════════════════════════════════════
 // PLAYER LOGIC
@@ -1146,11 +1167,14 @@ function esc(str) {
 // ════════════════════════════════════════════
 window.addEventListener('load', () => {
   document.getElementById('overlay-name').classList.remove('show');
-  // Conectar Firebase automáticamente para todos
   autoConnectFirebase();
-  // Si la URL tiene ?mode=player, ir directo a la pantalla de jugador
   const params = new URLSearchParams(window.location.search);
-  if (params.get('mode') === 'player') {
+  const mod = params.get('module');
+  if (mod === '0' || mod === '1') {
+    // Participante llegó desde QR: seleccionar módulo y entrar directo
+    const idx = parseInt(mod);
+    state.moduleIdx = idx;
+    document.querySelectorAll('.mod-btn').forEach((b,i) => b.classList.toggle('active', i === idx));
     goPlayer();
   }
 });
