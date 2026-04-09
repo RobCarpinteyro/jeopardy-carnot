@@ -1152,6 +1152,8 @@ function showPlayerReveal(correctAns) {
 function showPlayerIdle() {
   document.getElementById('player-content').innerHTML = `
     <div class="player-waiting">
+      <div style="font-size:clamp(1.6rem,6vw,2.4rem);font-weight:900;letter-spacing:0.06em;line-height:1;margin-bottom:0.15rem;background:linear-gradient(135deg,#F5C842 0%,#D4A017 50%,#F5C842 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">GASTRÓPARDY!</div>
+      <div style="font-size:0.72rem;color:rgba(245,200,66,0.55);letter-spacing:0.1em;font-style:italic;margin-bottom:1.2rem;">by Dr. Miguel Ángel Valdovinos</div>
       <span class="dot"></span> Conectado — esperando pregunta…<br>
       <span style="font-size:0.82rem;color:var(--dim);">El Dr. Valdovinos mostrará la siguiente pregunta</span><br><br>
       <button class="btn-sm" style="background:var(--navy-card);color:var(--gold-light);border:1px solid var(--gold);" onclick="showScores()">🏆 Ver marcador</button>
