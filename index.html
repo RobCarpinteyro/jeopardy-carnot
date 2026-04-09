@@ -519,8 +519,20 @@ body {
       </div>
       <div class="q-text" id="q-text-display"></div>
       <div class="options" id="q-options"></div>
+      <!-- Botón iniciar cronómetro — grande y prominente -->
+      <div id="btn-start-wrap" style="text-align:center;margin-bottom:1rem;">
+        <button id="btn-start-timer"
+          onclick="startTimerManual()"
+          style="background:linear-gradient(135deg,#F5C842,#D4A017);color:#0A1628;
+                 font-family:inherit;font-weight:900;font-size:1.1rem;letter-spacing:0.12em;
+                 text-transform:uppercase;padding:0.85rem 2.5rem;border:none;border-radius:8px;
+                 cursor:pointer;box-shadow:0 4px 24px rgba(212,160,23,0.5);
+                 transition:transform 0.1s,box-shadow 0.2s;">
+          ▶ INICIAR CRONÓMETRO
+        </button>
+      </div>
       <div class="q-actions">
-        <button class="btn-sm" style="background:var(--gold);color:var(--navy);" id="btn-reveal" onclick="revealAnswer()">Revelar respuesta</button>
+        <button class="btn-sm" style="background:var(--gold);color:var(--navy);display:none;" id="btn-reveal" onclick="revealAnswer()">Revelar respuesta</button>
         <button class="btn-sm" style="background:var(--navy-light);color:var(--white);" onclick="backToBoard()">← Tablero</button>
         <button class="btn-sm" style="background:var(--navy-light);color:var(--white);" onclick="showScores()">🏆 Marcador</button>
       </div>
@@ -605,32 +617,32 @@ const MODULES = [
         { pts:500, q:"¿Estructura química del tegoprazan?", opts:["Pirimidina","Sulfonil pirrol","Benzimidazol","Imidazopiridina"], ans:2 },
       ]},
       { name: "ERGE", questions: [
-        { pts:100, q:"Paciente con esofagitis B. Persiste con síntomas a pesar de IBP bid 2 meses. Nueva endoscopia negativa y pH-impedancia con IBP mostró TEA 2% y asociación sintomática positiva con reflujo no ácido. ¿Cuál es el diagnóstico?", opts:["Pirosis funcional","Hipersensibilidad al reflujo","Sobreposición ERGE + Hipersensibilidad al reflujo","Sobreposición ERGE + Pirosis funcional"], ans:2 },
+        { pts:100, q:"Paciente con esofagitis B. Persiste con síntomas a pesar de IBP bid 2 meses. Nueva endoscopia negativa y una pH-impedancia con IBP mostró TEA 2% y asociación sintomática positiva con episodios de reflujo no ácido. ¿Cuál es el diagnóstico?", opts:["Pirosis funcional","Hipersensibilidad al reflujo","Sobreposición ERGE + Hipersensibilidad al reflujo","Sobreposición ERGE + Pirosis funcional"], ans:2 },
         { pts:200, q:"¿Cuál es la característica de tegoprazan ideal para tratamiento a demanda en ERGE?", opts:["Rapidez de acción","Mantiene pH intragástrico >4 por 24 h","Sin interacción con alimentos","Todas"], ans:3 },
-        { pts:300, q:"Mujer 30 años, pirosis de 9 meses, endoscopia negativa, sin respuesta a IBP qd. pH-impedancia sin IBP: TEA 3%, IS 74%. ¿Cuál es su conducta terapéutica?", opts:["Doble dosis de IBP","Agregar alginato","Cambiar a neuromodulador","Cambiar a P-CAB"], ans:2 },
-        { pts:400, q:"Hombre 55 años con esofagitis C y hernia hiatal de 2 cm, en esomeprazol bid por 2 meses y síntomas persistentes. Erosiones confluentes 50% circunferencia. Manometría con aperistalsis. ¿Cuál es su conducta?", opts:["Agregar bioadhesivo con condroitin sulfato","Cambiar a Tegoprazan","Agregar famotidina nocte y procinético","Funduplicatura"], ans:1 },
-        { pts:500, q:"Mujer 22 años, 8 meses con regurgitación postprandial, sin pirosis, vómitos ni síntomas nocturnos. IBP bid 2 meses sin respuesta. pH-impedancia: TEA 4%, reflujo no ácido postprandial, IS y PAS positivos. ¿Cuál es su conducta?", opts:["Cambiar a P-CAB","Respiración diafragmática y biofeedback","Neuromodulador","Funduplicatura"], ans:1 },
+        { pts:300, q:"¿Mujer 30 años, pirosis de 9 meses, endoscopia negativa, sin respuesta a IBP qd correctamente tomado. pH-impedancia sin IBP: TEA 3%, IS 74%. ¿Cuál es su conducta terapéutica?", opts:["Doble dosis de IBP","Agregar alginato","Cambiar a neuromodulador","Cambiar a P-CAB"], ans:2 },
+        { pts:400, q:"Hombre 55 años con esofagitis C y hernia hiatal de 2 cm, en esomeprazol bid por 2 meses y síntomas persistentes. Nueva endoscopia con erosiones confluentes en el 50% de la circunferencia del esófago. Manometría con aperistalsis. ¿Cuál es su conducta?", opts:["Agregar bioadhesivo con condroitin sulfato","Cambiar a Tegoprazan","Agregar famotidina nocte y procinético","Funduplicatura"], ans:1 },
+        { pts:500, q:"Mujer 22 años, 8 meses con regurgitación postprandial, sin pirosis, vómitos, ni síntomas nocturnos. Tratada con IBP bid 2 meses, sin respuesta. Endoscopia negativa. pH-impedancia sin IBP: TEA 4%, numerosos episodios de reflujo no ácidos postprandiales e IS y PAS positivos. ¿Cuál es su conducta?", opts:["Cambiar a P-CAB","Respiración diafragmática y biofeedback","Neuromodulador","Funduplicatura"], ans:1 },
       ]},
       { name: "Tego evidencias/H. pylori", questions: [
-        { pts:100, q:"¿En cuáles desenlaces Tegoprazan fue significativamente superior a pantoprazol en ERGE en ECC hecho en México?", opts:["Menor frecuencia de pirosis a la semana","Mejoría del GERD-HRQL a los 7 días","Tasa de cicatrización de esofagitis a las 4 semanas","Todas"], ans:3 },
-        { pts:200, q:"En esquemas con tegoprazan, ¿cuál es el efecto más importante para conseguir mayores tasas de erradicación de H. pylori?", opts:["Mantener pH intragástrico >6 desde la primera dosis","Acción bactericida","Menor interacción fármaco-fármaco con antibióticos","Disminuye la fase replicativa del H. pylori"], ans:0 },
-        { pts:300, q:"Hombre que vive en Tabasco con úlcera gástrica H.p positiva. ¿Cuál es su conducta considerando efectividad y eventos adversos?", opts:["Dual: TEGO + AMO dosis altas 14 d","Concomitante: TEGO + AMO + CLA + METRO 14 d","Secuencial: IBP + AMO + CLA + METRO 14 d","Cuádruple: TEGO + BIS + DOXI + METRO 14 d"], ans:0 },
-        { pts:400, q:"Las siguientes son indicaciones emergentes de Tegoprazan con evidencia científica, EXCEPTO:", opts:["Esófago de Barrett","Úlceras inducidas por endoscopia (EMR, ESD)","Manifestaciones extraesofágicas de ERGE","Hemorragia de tubo digestivo alto no variceal"], ans:0 },
-        { pts:500, q:"Hombre con úlcera gástrica Hp positiva. Tratado con IBP, AMO, CLA 14 días. Prueba de aliento al mes positiva. ¿Cuál es su conducta?", opts:["Dual: TEGO + AMO dosis altas 14 d","Concomitante: TEGO + AMO + CLA + METRO 14 d","Secuencial: IBP + AMO + CLA + METRO 14 d","Cuádruple: TEGO + BIS + DOXI + METRO 14 d"], ans:3 },
+        { pts:100, q:"¿En cuáles de los siguientes desenlaces, Tegoprazan fue significativamente superior a pantoprazol en pacientes con ERGE en un ECC hecho en México?", opts:["Menor frecuencia de pirosis a la semana de tratamiento","Mejoría del GERD-HRQL a los 7 días de tratamiento","Tasa de cicatrización de esofagitis a las 4 semanas","Todas"], ans:3 },
+        { pts:200, q:"En los esquemas con tegoprazan. ¿Cuál es el efecto más importante de tegoprazan para conseguir mayores tasas de erradicación de la infección por Helicobacter pylori?", opts:["Mantener un pH-intragástrico >6 desde la primera dosis","Acción bactericida","Menor interacción fármaco-farmaco con antibióticos","Disminuye la fase replicativa del H. p."], ans:0 },
+        { pts:300, q:"Hombre que vive en Tabasco con un úlcera gástrica H.p positiva. ¿Cuál es su conducta considerando efectividad y eventos adversos?", opts:["Dual: TEGO + AMO dosis altas 14 d","Concomitante: TEGO + AMO + CLA + METRO 14 d","Secuencial: IBP + AMO + CLA + METRO 14 d","Cuadruple: TEGO + BIS + DOXI + METRO 14 d"], ans:0 },
+        { pts:400, q:"Las siguientes son indicaciones emergentes de Tegoprazan que cuentan ya con alguna evidencia científica. EXCEPTO:", opts:["Esófago de Barrett","Ulceras inducidas por endoscopia (EMR, ESD)","Manifestaciones extraesofágicas de ERGE","Hemorragia de tubo digestivo alto no variceal"], ans:0 },
+        { pts:500, q:"Hombre con úlcera gástrica Hp positiva. Tratado con IBP, AMO, CLA 14 días. Prueba de aliento al mes positiva. ¿Cuál es su conducta?", opts:["Dual: TEGO + AMO dosis altas 14 d","Concomitante: TEGO + AMO + CLA + METRO 14 d","Secuencial: IBP + AMO + CLA + METRO 14 d","Cuadruple: TEGO + BIS + DOXI + METRO 14 d"], ans:3 },
       ]},
       { name: "Fibra / Estreñimiento", questions: [
-        { pts:100, q:"Mujer 33 años, evacuaciones en escíbalos, pujo excesivo y evacuación incompleta. MAR: presiones normales. Con el pujo, aumento de presión del esfínter anal. ¿Cuál es la mejor conducta?", opts:["Fibra soluble","Biofeedback","Laxantes osmóticos","Prucaloprida"], ans:1 },
-        { pts:200, q:"Mujer 45 años con estreñimiento de 18 meses, evacua cada 3-5 días sin laxantes, distensión abdominal. Tránsito >72 hs; MAR normal. ¿Cuál es el mecanismo fisiopatológico más probable?", opts:["Ausencia de reflejo rectoanal inhibitorio","Disinergia defecatoria","Disminución de contracciones gigantes migratorias","Hipersensibilidad visceral"], ans:2 },
-        { pts:300, q:"¿Cuáles son las características fisicoquímicas ideales de una fibra para el tratamiento del estreñimiento?", opts:["Fibra soluble, no fermentable, viscosa","Fibra insoluble, fermentable, viscosa","Fibra soluble, poco fermentable, no viscosa","Fibra insoluble, no fermentable, no viscosa"], ans:0 },
-        { pts:400, q:"Fibra que es poco efectiva y produce distensión y meteorismo en pacientes con estreñimiento crónico funcional:", opts:["Psyllium plantago","Ispágula","Salvado de trigo","Metilcelulosa"], ans:2 },
-        { pts:500, q:"Hombre 62 años, estreñimiento crónico desde los 25 años. 2 pastillas de psyllium/día sin mejoría. Tránsito con marcadores: toda la actividad en colon derecho. MAR normal. ¿Cuál es su conducta?", opts:["Incrementar dosis de psyllium","Prucaloprida","Macrogol","Biofeedback"], ans:1 },
+        { pts:100, q:"¿Mujer 33 años, 8 meses con evacuaciones 1 vez al día, en escíbalos, con pujo excesivo y evacuación incompleta. Manometría anorrectal con presiones en reposo y en contracción normales. Con el pujo, presión rectal normal, incremento de la presión del esfínter anal. ¿Cuál es la mejor conducta?", opts:["Fibra soluble","Biofeedback","Laxantes osmóticos","Prucaloprida"], ans:1 },
+        { pts:200, q:"Mujer 45 años con estreñimiento de 18 meses, evacua cada 3-5 días sin laxantes, tiene distensión abdominal. Tránsito con marcadores >72 hs; manometría anorrectal normal. ¿Cuál es el mecanismo fisiopatológico más probable?", opts:["Ausencia de reflejo rectoanal inhibitorio","Disinergia defecatoria","Disminución de contracciones gigantes migratorias","Hipersensibilidad visceral"], ans:2 },
+        { pts:300, q:"¿Cuáles son las características fisicoquímicas ideales que debe tener una fibra para el tratamiento del estreñimiento?", opts:["Fibra soluble, no fermentable, viscosa","Fibra insoluble, fermentable, viscosa","Fibra soluble, poco fermentable, no viscosa","Fibra insoluble, no fermentable, no viscosa"], ans:0 },
+        { pts:400, q:"Fibra que es poco efectiva y produce distensión y meteorismo en pacientes con estreñimiento crónico funcional", opts:["Psyllium plantago","Ispaghula","Salvado","Metilcelulosa"], ans:2 },
+        { pts:500, q:"Hallazgo histopatológico en pacientes con estreñimiento crónico refractario por inercia colónica", opts:["Melanosis coli","Disminución de células intersticiales de Cajal","Disminución de macrófagos M2","Degeneración o ausencia de células ganglionares en el plexo mientérico"], ans:1 },
       ]},
       { name: "Microbiota / Estreñimiento", questions: [
         { pts:100, q:"¿Cuál es la composición de la microbiota fecal en pacientes con estreñimiento crónico?", opts:["Aumento de Firmicutes exclusivamente","Disbiosis con reducción de la diversidad microbiana","Ausencia de bacterias anaerobias","Disminución de arqueas"], ans:1 },
         { pts:200, q:"¿Cuál es un postbiótico con evidencia clínica robusta en el manejo de la diarrea aguda en niños?", opts:["Proteína Amuc_1100 de Akkermansia muciniphila","Butirato","S. boulardii inactivado","Lactobacillus LB inactivado"], ans:3 },
         { pts:300, q:"¿Cuál es el microorganismo productor de metano asociado a estreñimiento?", opts:["Enterococo faecium","Escherichia coli","Methanobrevibacter smithii","Faecalobacterium prausnitzii"], ans:2 },
         { pts:400, q:"¿En qué condición los probióticos pueden ser útiles en el manejo del estreñimiento crónico funcional?", opts:["En estreñimiento leve","En estreñimiento refractario","En disinergia defecatoria","En inercia colónica"], ans:0 },
-        { pts:500, q:"Hombre 25 años, estreñimiento crónico desde la infancia. Colon por enema: zona de transición en rectosigmoides. ¿Cuál es el hallazgo en la MAR?", opts:["Contracción paradójica del puborrectal","Incremento de ondas lentas en reposo","Ausencia de reflejo rectoanal inhibitorio","Hiposensibilidad rectal"], ans:2 },
+        { pts:500, q:"Hombre de 25 años, estreñimiento crónico desde la infancia, evacua cada 5 días con laxantes, heces duras/a veces líquidas, distensión abdominal. Colon por enema con zona de transición \"en embudo\" en rectosigmoides. ¿Cuál es el hallazgo en la manometría anorrectal?", opts:["Contracción paradójica del puborrectal","Incremento de ondas lentas en reposo","Ausencia de reflejo rectoanal inhibitorio","Hiposensibilidad rectal"], ans:2 },
       ]},
     ]
   },
@@ -638,39 +650,39 @@ const MODULES = [
     name: "Módulo 2: Microbiota + SII",
     categories: [
       { name: "Microbiota en SII", questions: [
-        { pts:100, q:"¿Cuál de los siguientes es el mejor ejemplo de un prebiótico?", opts:["Lactobacillus rhamnosus","Inulina","Butirato","Bifidobacterium longum"], ans:1 },
-        { pts:200, q:"¿Cuál es el efecto más consistente de los probióticos en el SII?", opts:["Erradicación de patógenos específicos","Mejora global de síntomas y calidad de vida","Normalización del tránsito intestinal","Restauración completa de la eubiosis"], ans:1 },
-        { pts:300, q:"¿Cuál de las siguientes afirmaciones sobre la microbiota en SII es más precisa?", opts:["Siempre hay disminución de Lactobacillus","Existe disbiosis pero sin patrón universal consistente","La microbiota es idéntica en todos los subtipos de SII","El trasplante de microbiota fecal es tratamiento de primera línea"], ans:1 },
-        { pts:400, q:"¿Cuál es el mecanismo por el que el eje intestino-cerebro participa en el SII?", opts:["Solo vía nervio vago aferente","Únicamente por señales hormonales sistémicas","Integración bidireccional de señales neurales, inmunes y endocrinas","Exclusivamente por producción de serotonina en el SNC"], ans:2 },
-        { pts:500, q:"¿Cuál es el rol de los ácidos grasos de cadena corta (AGCC) en el SII?", opts:["Son siempre proinflamatorios en el SII","Modulan la motilidad, permeabilidad y respuesta inmune intestinal","Solo tienen efecto sobre el colon derecho","Su producción está aumentada en todos los subtipos de SII"], ans:1 },
+        { pts:100, q:"¿Cuál es un género bacteriano aumentado en la microbiota intestinal de los pacientes con SII?", opts:["Bifidobacterium","Faecalobacterium","Enterobacteriaceae","Todos"], ans:2 },
+        { pts:200, q:"¿Especies bacterianas más frecuentes en SIBO?", opts:["Klebsiella oxitoca y E.coli","Klebsiella pneumoniae y E. Coli","Enterococcus faecalis y Salmonella sp","Streptococcus sp y Fusobacterium nucleatum"], ans:1 },
+        { pts:300, q:"¿Cuál de los siguientes cambios en la microbiota intestinal se ha descrito después de un tratamiento con Rifaximina en SII?", opts:["Eubiosis","Rebiosis","Disbiosis","No afecta la microbiota intestinal"], ans:0 },
+        { pts:400, q:"¿Cuáles han sido los resultados de los ensayos con trasplante fecal en pacientes con SII?", opts:["Mejoría de síntomas en SII-D","Mejoría de síntomas en SII-C","No concluyentes","Empeoramiento de síntomas y QoL"], ans:2 },
+        { pts:500, q:"¿Cuál es la posición de la AMG 2024 respecto al uso de probióticos en SII?", opts:["La evidencia es controversial","Usarlos únicamente como terapia adyuvante","Indicarlos por períodos cortos (1 mes), si no son útiles supenderlos","Todas"], ans:3 },
       ]},
       { name: "SII / Fisiopatología", questions: [
-        { pts:100, q:"¿Cuáles son los criterios de Roma IV para SII?", opts:["Dolor abdominal crónico sin cambio en evacuaciones","Dolor abdominal recurrente ≥1 día/semana en últimos 3 meses, con ≥2 criterios relacionados con defecación","Diarrea crónica sin dolor abdominal","Distensión abdominal sin dolor"], ans:1 },
-        { pts:200, q:"¿Cuál es el término correcto para la sensación exacerbada ante distensión rectal en SII, que se presenta a volúmenes menores que en sujetos sanos?", opts:["Alodinia mecánica","Hipersensibilidad visceral","Sensibilización central","Nocicepción exacerbada"], ans:1 },
+        { pts:100, q:"Las siguientes son alteraciones motoras descritas en pacientes con SII, EXCEPTO:", opts:["Contracciones en racimos (cluster contractions) en el intestino delgado","Reflejo gastrocólico aumentado","Disminución de la fase III del complejo motor migratorio","Aumento del tránsito colónico en SII-D"], ans:2 },
+        { pts:200, q:"¿Cómo se denomina la respuesta dolorosa provocada por la distensión rectal en pacientes con SII, que se presenta a volúmenes menores que en individuos sanos?", opts:["Alodinia mecánica","Hipersensibilidad visceral","Sensibilización central","Nocicepción exacerbada"], ans:1 },
         { pts:300, q:"Los siguientes son mecanismos fisiopatológicos en SII, EXCEPTO:", opts:["Infección gastrointestinal","Disbiosis","Autoinmunidad","Intolerancias alimentarias"], ans:2 },
-        { pts:400, q:"En relación a la permeabilidad intestinal alterada en SII, ¿cuál opción es la más consistente con los estudios clínicos?", opts:["La prueba lactulosa/manitol aumentada es concluyente","Ocurre en la mayoría de los subtipos de SII","Es un mecanismo fisiopatológico que puede ocurrir en el SII","Los probióticos corrigen el problema por incremento de expresión de ocludina"], ans:2 },
+        { pts:400, q:"En relación a la permeabilidad intestinal alterada en SII, ¿Cuál de las siguientes opciones es la más consistente con los estudios clínicos?", opts:["La prueba lactulosa/manitol aumentada es concluyente","Ocurre en la mayoría de los subtipos de SII","Es un mecanismo fisiopatológico que puede ocurrir en el SII","Los probióticos corrigen el problema por incremento de expresión de ocludina"], ans:2 },
         { pts:500, q:"¿En qué porcentaje de pacientes con SII-D la diarrea por sales biliares es responsable de los síntomas?", opts:["Menos del 10%","En el 20 al 40%","En la mitad de los casos","En >60%"], ans:1 },
       ]},
       { name: "SII / Tratamiento", questions: [
         { pts:100, q:"¿Qué tipo de dieta tiene la evidencia de mejor calidad en el manejo del SII?", opts:["Dieta mediterránea","Dieta NICE","Dieta baja en FODMAP","Dieta sin gluten"], ans:2 },
-        { pts:200, q:"¿Mecanismo de acción de la dieta baja en FODMAP en SII?", opts:["Disminuye la fermentación bacteriana y el efecto osmótico de la dieta","Efecto antiinflamatorio","Incremento de bifidobacterias en la microbiota intestinal","Mejora la permeabilidad intestinal"], ans:0 },
+        { pts:200, q:"¿Mecanismo de acción de la dieta baja en FODMAP en SII?", opts:["Disminuye la fermentación bacteriana y el efecto osmótico de la dieta","Efecto antiinflamatorio","Incremento de bifidobacterias en la microbiota intestinal","Mejora la permeabilidad intestinal"], ans:1 },
         { pts:300, q:"¿Cuáles son los fármacos de primera línea para el manejo del dolor en SII?", opts:["Antidepresivos tricíclicos","Opiáceos","Antiespasmódicos","Ligandos alfa 2 delta"], ans:2 },
         { pts:400, q:"¿Cuáles son los efectos del uso de alfa-galactosidasa en el manejo del SII?", opts:["Mejora el dolor abdominal","Mejora la distensión y el meteorismo","Mejora la frecuencia y características de las evacuaciones","Produce mejoría global del SII"], ans:1 },
         { pts:500, q:"¿Cuál de los siguientes fármacos es agonista de opiáceos, inhibidor de canales de calcio y bloqueador de canales de potasio en el intestino?", opts:["Eluxalodina","Mebeverina","Trimebutina","Plecanatida"], ans:2 },
       ]},
       { name: "SII / Neuromoduladores", questions: [
-        { pts:100, q:"Neuromodulador de primera elección en pacientes con SII-D:", opts:["Duloxetina","Imipramina","Quetiapina","Pregabalina"], ans:1 },
-        { pts:200, q:"Neuromodulador que debe evitarse en pacientes con SII-E:", opts:["Paroxetina","Escitalopram","Venlafaxina","Sertralina"], ans:0 },
-        { pts:300, q:"Neuromodulador alternativo para manejo del dolor en pacientes que no toleran los tricíclicos:", opts:["Sertralina","Desvenlafaxina","Duloxetina","Mirtazapina"], ans:2 },
+        { pts:100, q:"Neuromodulador de primera elección en pacientes con SII-D", opts:["Duloxetina","Imipramina","Quetiapina","Pregabalina"], ans:1 },
+        { pts:200, q:"Neuromodulador que debe evitarse en pacientes con SII-E", opts:["Paroxetina","Escitalopram","Venlafaxina","Sertralina"], ans:0 },
+        { pts:300, q:"Neuromodulador alternativo para manejo del dolor en pacientes que no toleran los tricíclicos", opts:["Sertralina","Desvenlafaxina","Duloxetina","Mirtazapina"], ans:2 },
         { pts:400, q:"¿Por qué funcionan los neuromoduladores en los TIIC?", opts:["Son analgésicos viscerales","Mejoran la psicomorbilidad asociada","Favorecen la neurogénesis","Todas"], ans:3 },
-        { pts:500, q:"Clase de neuromoduladores asociados a mayor riesgo de hemorragia de tubo digestivo:", opts:["Tricíclicos","Inhibidores de recaptura de serotonina y noradrenalina","Azapironas","Inhibidores selectivos de la recaptura de serotonina"], ans:3 },
+        { pts:500, q:"Clase de neuromoduladores asociados a un mayor riesgo hemorragia de tubo digestivo", opts:["Tricíclicos","Inhibidores de recaptura de serotonina y noradrenalina","Azapironas","Inhibidores selectivos de la recaptura de serotonina"], ans:1 },
       ]},
       { name: "SII / Manejo", questions: [
         { pts:100, q:"Son terapias psicológicas efectivas en pacientes con SII, EXCEPTO:", opts:["Hipnosis","Terapia cognitivo conductual","Moxibustión","Mindfulness asistida por computadora"], ans:2 },
-        { pts:200, q:"Mujer 32 años, dolor que alivia con la defecación, evacuaciones Bristol 2, distensión objetiva y meteorismo. Sin signos de alarma. ¿Cuál es su conducta?", opts:["Dieta NICE + bromuro de pinaverio + respiración diafragmática","Dieta baja en FODMAP + trimebutina con simeticona + ejercicios hipopresivos","Dieta baja en gluten + alverina con simeticona + respiración diafragmática","Dieta baja en FODMAP + Loperamida + sertralina"], ans:1 },
-        { pts:300, q:"Mujer 20 años, dolor abdominal, evacuaciones Bristol 1 cada 4 días, pujo excesivo. Tránsito lento; MAR con aumento de presión esfinteriana con el esfuerzo. ¿Cuál es su conducta?", opts:["Linaclotida + biofeedback","Prucaloprida + macrogol","Incremento de fibra dietaria + biofeedback","Menta piperita + macrogol"], ans:0 },
-        { pts:400, q:"Hombre 35 años, dolor abdominal con las evacuaciones, diarrea Bristol 7, distensión objetiva postprandial. Pobre respuesta a loperamida y antiespasmódicos. ¿Qué prescribe?", opts:["Dieta baja en FODMAP + Carbón activado + lidamidina","Dieta NICE + Colestiramina","Dieta baja en FODMAP + Rifaximina","Dieta mediterránea + Probióticos"], ans:2 },
-        { pts:500, q:"Mujer 41 años, dolor abdominal 1.5 años no asociado a la evacuación, cirugías previas. Multitratada sin mejoría. Comorbilidades: cefalea, ataques de pánico, cistitis intersticial. ¿Cuál es su recomendación?", opts:["Parches de buprenorfina para el dolor","Tricíclico + terapia cognitivo conductual","Interconsulta con algólogo","Respiración diafragmática + venlafaxina"], ans:1 },
+        { pts:200, q:"Mujer 32 años, 9 meses con dolor que alivia con la defecación, evacuaciones Bristol 2 en el 20% de las evacuaciones anormales, distensión objetiva y meteorismo. Sin signos de alarma. ¿Cuál es su conducta?", opts:["Dieta NICE + bromuro de pinaverio + respiración diafragmática","Dieta baja en FODMAP + trimebutina con simeticona + ejercicios hipopresivos","Dieta baja en gluten + alverina con simeticona + respiración diafragmática","Dieta baja en FODMAP + Loperamida + sertralina"], ans:1 },
+        { pts:300, q:"Mujer 20 años, 2 años con dolor abdominal y evacuaciones Bristol 1, cada 4 días. Pujo excesivo, evacuación incompleta, en escíbalos. Tránsito lento con marcadores; MAR: con aumento de presión esfinteriana con el esfuerzo defecatorio. ¿Cuál es su conducta?", opts:["Linaclotida + biofeedback","Prucaloprida + macrogol","Incremento de fibra dietaria + biofeedback","Menta piperita + macrogol"], ans:0 },
+        { pts:400, q:"Hombre 35 años, dolor abdominal que se presenta con las evacuaciones, diarrea 1 vez al día, Bristol 7 en el 30% de las evacuaciones, distensión objetiva postprandial tardía, exceso de gas. Sin signos de alarma. Pobre respuesta a loperamida y antiespasmódicos con simeticona. ¿Qué prescribe?", opts:["Dieta baja en FODMAP + Carbón activado + lidamidina","Dieta NICE + Colestiramina","Dieta baja en FODMAP + Rifaximina","Dieta mediterránea + Probióticos"], ans:2 },
+        { pts:500, q:"Mujer 41 años, dolor abdominal de 1.5 años, no asociado a la evacuación. Apendicectomía y colecistectomía. Signo de Carnet negativo. Sin datos de alarma. EGD y colonoscopia negativas, TAC contrastada normal. Perfil metabólico y de porfirinas negativos. Comorbilidades: cefalea, ataques de pánico, cistitis intersticial. Multitratada con antiespasmódicos, ansiolíticos, medicina alternativa sin mejoría. ¿Cuál es su recomendación?", opts:["Parches de buprenorfina para el dolor","Tricíclico + terapia cognitivo conductual","Interconsulta con algólogo","Respiración diafragmática + venlafaxina"], ans:1 },
       ]},
     ]
   }
@@ -878,7 +890,8 @@ function openQuestion(catIdx, qIdx) {
   document.getElementById('q-cat-label').textContent = cat.name;
   document.getElementById('q-pts-label').textContent = q.pts + ' pts';
   document.getElementById('q-text-display').textContent = q.q;
-  document.getElementById('btn-reveal').style.display = 'inline-block';
+  document.getElementById('btn-reveal').style.display = 'none';
+  document.getElementById('btn-start-wrap').style.display = 'block';
   document.getElementById('response-count').textContent = '0';
   const optsEl = document.getElementById('q-options');
   optsEl.innerHTML = '';
@@ -894,7 +907,10 @@ function openQuestion(catIdx, qIdx) {
   fbBroadcast({ type: 'question', moduleIdx: state.moduleIdx, catIdx, qIdx, timeLimit: 20 });
   // Listen for responses count
   listenResponseCount(catIdx, qIdx);
-  startTimer(20);
+  // Timer starts manually — reset display to 20
+  clearTimer();
+  state.timerVal = 20;
+  updateTimerUI();
   showScreen('question');
 }
 let responseCountRef = null;
@@ -942,6 +958,22 @@ function resetBoard() {
 // ════════════════════════════════════════════
 // TIMER
 // ════════════════════════════════════════════
+function startTimerManual() {
+  // Hide the start button, show reveal button
+  const startWrap = document.getElementById('btn-start-wrap');
+  const revealBtn = document.getElementById('btn-reveal');
+  if (startWrap) startWrap.style.display = 'none';
+  if (revealBtn) revealBtn.style.display = 'inline-block';
+  // Play start sound (if available)
+  try {
+    const snd = new Audio('./start.mp3');
+    snd.play().catch(() => {});
+  } catch(e) {}
+  // Start local timer on MC
+  startTimer(20);
+  // Broadcast timer_start so all players begin their countdowns simultaneously
+  fbBroadcast({ type: 'timer_start', timeLimit: 20 });
+}
 function startTimer(secs) {
   clearTimer();
   state.timerVal = secs;
@@ -1054,9 +1086,15 @@ function handleGameEvent(data) {
     state.playerAnswered = false;
     state.playerQuestionStart = Date.now();
     playerTimerLimit = data.timeLimit || 20;
-    playerTimerStart = Date.now();
+    // Show question but DON'T start timer yet — waits for timer_start event
     renderPlayerQuestion(data.catIdx, data.qIdx);
-    startPlayerClientTimer(data.timeLimit || 20);
+    // Reset timer bar to full without counting down
+    const b = document.getElementById('player-timer-bar');
+    if (b) { b.style.width = '100%'; b.style.background = 'var(--gold)'; }
+  } else if (data.type === 'timer_start') {
+    // MC pressed "Iniciar Cronómetro" — start countdown on player device
+    playerTimerStart = Date.now();
+    startPlayerClientTimer(data.timeLimit || playerTimerLimit || 20);
   } else if (data.type === 'reveal') {
     stopPlayerClientTimer();
     showPlayerReveal(data.ans);
