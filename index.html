@@ -417,10 +417,12 @@ body {
 }
 #conn-status.connected { color: #2ECC71; }
 #conn-status.error { color: #E74C3C; }
+#conn-status.connected { color: #2ECC71; cursor: pointer; }
+#conn-status.connected:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
-<div id="conn-status">⚪ desconectado</div>
+<div id="conn-status" onclick="handleConnClick()">⚪ desconectado</div>
 <!-- ═══════════════════════════════════
      LANDING
 ═══════════════════════════════════ -->
@@ -537,8 +539,10 @@ body {
   <div class="player-inner">
     <div id="player-content" style="width:100%;">
       <div class="player-waiting">
+        <div style="font-size:clamp(1.6rem,6vw,2.4rem);font-weight:900;letter-spacing:0.06em;line-height:1;margin-bottom:0.15rem;background:linear-gradient(135deg,#F5C842 0%,#D4A017 50%,#F5C842 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">GASTRÓPARDY!</div>
+        <div style="font-size:0.72rem;color:rgba(245,200,66,0.55);letter-spacing:0.1em;font-style:italic;margin-bottom:1.2rem;">by Dr. Miguel Ángel Valdovinos</div>
         <span class="dot"></span> Conectado — esperando pregunta…<br>
-        <span style="font-size:0.82rem;">El MC activará la siguiente ronda</span>
+        <span style="font-size:0.82rem;">El Dr. Valdovinos mostrará la siguiente pregunta</span>
       </div>
     </div>
   </div>
@@ -576,8 +580,11 @@ body {
      OVERLAYS
 ═══════════════════════════════════ -->
 <div id="overlay-name" class="overlay">
-  <div style="font-size:1.7rem;color:var(--gold-light);margin-bottom:0.4rem;">¡Bienvenido!</div>
-  <div style="color:var(--dim);font-size:0.9rem;">Escribe tu nombre para registrar tus puntos</div>
+  <div style="font-size:clamp(2rem,8vw,3rem);font-weight:900;color:var(--gold-light);letter-spacing:0.06em;line-height:1;margin-bottom:0.2rem;background:linear-gradient(135deg,#F5C842 0%,#D4A017 50%,#F5C842 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">GASTRÓPARDY!</div>
+  <div style="font-size:0.78rem;color:rgba(245,200,66,0.6);letter-spacing:0.12em;font-style:italic;margin-bottom:1.2rem;">by Dr. Miguel Ángel Valdovinos</div>
+  <div style="width:40px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 1.2rem;"></div>
+  <div style="font-size:1.1rem;color:var(--gold-light);font-weight:700;margin-bottom:0.3rem;">¡Bienvenido!</div>
+  <div style="color:var(--dim);font-size:0.85rem;margin-bottom:0.25rem;">Escribe tu nombre para registrar tus puntos</div>
   <input type="text" id="name-input" placeholder="Tu nombre completo" maxlength="30"
     onkeydown="if(event.key==='Enter')confirmName()">
   <button class="btn btn-primary" style="max-width:220px;" onclick="confirmName()">Entrar al juego →</button>
@@ -802,14 +809,10 @@ function selectModule(idx) {
   state.moduleIdx = idx;
   document.querySelectorAll('.mod-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
 }
-// Secret MC trigger: 5 taps on footer brand
-let mcTapCount = 0; let mcTapTimer = null;
-function handleMcTap() {
-  mcTapCount++;
-  if (mcTapTimer) clearTimeout(mcTapTimer);
-  mcTapTimer = setTimeout(() => { mcTapCount = 0; }, 2000);
-  if (mcTapCount >= 5) {
-    mcTapCount = 0;
+function handleConnClick() {
+  // Solo actúa desde la pantalla de inicio
+  const landing = document.getElementById('screen-landing');
+  if (landing && landing.classList.contains('active')) {
     goMC();
   }
 }
@@ -1150,7 +1153,7 @@ function showPlayerIdle() {
   document.getElementById('player-content').innerHTML = `
     <div class="player-waiting">
       <span class="dot"></span> Conectado — esperando pregunta…<br>
-      <span style="font-size:0.82rem;color:var(--dim);">El MC activará la siguiente ronda</span><br><br>
+      <span style="font-size:0.82rem;color:var(--dim);">El Dr. Valdovinos mostrará la siguiente pregunta</span><br><br>
       <button class="btn-sm" style="background:var(--navy-card);color:var(--gold-light);border:1px solid var(--gold);" onclick="showScores()">🏆 Ver marcador</button>
     </div>`;
 }
