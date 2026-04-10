@@ -840,6 +840,8 @@ function fbListenScores(callback) {
 function fbResetScores() {
   if (!scoresRef) { localStorage.removeItem('jeopardy_scores'); return; }
   scoresRef.remove();
+  // Limpiar todas las respuestas acumuladas también
+  if (db) db.ref('responses').remove();
 }
 // localStorage fallback
 function lsGetScores() {
@@ -962,6 +964,9 @@ function openQuestion(catIdx, qIdx) {
     btn.id = `opt-mc-${i}`;
     optsEl.appendChild(btn);
   });
+  // Limpiar respuestas anteriores de esta pregunta antes de empezar
+  if (db) db.ref(`responses/${catIdx}_${qIdx}`).remove();
+  statsLastSnapshot = null;
   // Broadcast question to all players
   fbBroadcast({ type: 'question', moduleIdx: state.moduleIdx, catIdx, qIdx, timeLimit: 15 });
   // Listen for responses count
