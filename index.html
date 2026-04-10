@@ -974,35 +974,73 @@ function openQuestion(catIdx, qIdx) {
 }
 let responseCountRef = null;
 let statsCurrentQ = null;
+let statsLastSnapshot = null;          // Cache del último snapshot para no flashear
+let statsThrottleTimer = null;         // Timer para throttle
+let statsLastUpdateTime = 0;
+const STATS_THROTTLE_MS = 250;         // Máx 4 actualizaciones/seg con 300 votos simultáneos
+
 function listenResponseCount(catIdx, qIdx) {
   if (responseCountRef) responseCountRef.off();
   if (!db) return;
   statsCurrentQ = { catIdx, qIdx };
+  statsLastSnapshot = null;
   responseCountRef = db.ref(`responses/${catIdx}_${qIdx}`);
   responseCountRef.on('value', snap => {
     const val = snap.val();
+    statsLastSnapshot = val;                        // Guardar siempre el último valor
     const count = val ? Object.keys(val).length : 0;
     const el = document.getElementById('response-count');
     if (el) el.textContent = count;
-    // Si el overlay de stats está visible, actualizar barras
+    // Actualizar stats con throttle (evita 300 rebuilds/seg)
     if (document.getElementById('overlay-stats').style.display === 'flex') {
-      updateStatsBars(val, catIdx, qIdx);
+      const now = Date.now();
+      if (now - statsLastUpdateTime >= STATS_THROTTLE_MS) {
+        statsLastUpdateTime = now;
+        updateStatsBars(val, catIdx, qIdx);
+      } else {
+        clearTimeout(statsThrottleTimer);
+        statsThrottleTimer = setTimeout(() => {
+          statsLastUpdateTime = Date.now();
+          if (document.getElementById('overlay-stats').style.display === 'flex') {
+            updateStatsBars(statsLastSnapshot, catIdx, qIdx);
+          }
+        }, STATS_THROTTLE_MS);
+      }
     }
   });
 }
 function showStats() {
   const overlay = document.getElementById('overlay-stats');
   overlay.style.display = 'flex';
-  if (!statsCurrentQ) return;
+  if (!statsCurrentQ) {
+    // Sin pregunta activa — mostrar estado vacío
+    const lbl = document.getElementById('stats-total-label');
+    if (lbl) lbl.textContent = '';
+    const c = document.getElementById('stats-bars');
+    if (c) c.innerHTML = '<div style="color:var(--dim);text-align:center;padding:2rem 1rem;font-size:0.88rem;">Selecciona una pregunta del tablero para ver estadísticas.</div>';
+    return;
+  }
   const { catIdx, qIdx } = statsCurrentQ;
-  if (!db) return;
-  db.ref(`responses/${catIdx}_${qIdx}`).once('value', snap => {
-    updateStatsBars(snap.val(), catIdx, qIdx);
-  });
+  // Mostrar datos cacheados inmediatamente (sin flash de vacío)
+  if (statsLastSnapshot !== undefined) {
+    updateStatsBars(statsLastSnapshot, catIdx, qIdx);
+  }
+  // Refrescar desde servidor (cubre el caso post-revealAnswer donde el listener fue apagado)
+  if (db) {
+    db.ref(`responses/${catIdx}_${qIdx}`).once('value', snap => {
+      statsLastSnapshot = snap.val();
+      updateStatsBars(snap.val(), catIdx, qIdx);
+    });
+  }
 }
 function hideStats() {
   document.getElementById('overlay-stats').style.display = 'none';
+  clearTimeout(statsThrottleTimer);
 }
+// Cerrar stats con ESC
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') hideStats();
+});
 const STAT_COLORS = ['#39beb7','#00a6b0','#007bc3','#2162af'];
 function updateStatsBars(val, catIdx, qIdx) {
   const mod = MODULES[state.moduleIdx];
@@ -1198,7 +1236,7 @@ function handleGameEvent(data) {
   if (data.type === 'question') {
     if (data.moduleIdx !== state.moduleIdx) return;
     state.playerAnswered = false;
-    state.playerQuestionStart = Date.now();
+    state.playerQuestionStart = 0;           // Se setea al iniciar cronómetro, no antes
     playerTimerLimit = data.timeLimit || 15;
     // Show question but DON'T start timer yet — waits for timer_start event
     renderPlayerQuestion(data.catIdx, data.qIdx);
@@ -1206,8 +1244,10 @@ function handleGameEvent(data) {
     const b = document.getElementById('player-timer-bar');
     if (b) { b.style.width = '100%'; b.style.background = 'var(--gold)'; }
   } else if (data.type === 'timer_start') {
-    // MC pressed "Iniciar Cronómetro" — reveal options and start countdown
-    playerTimerStart = Date.now();
+    // MC pressed "Iniciar Cronómetro" — reveal options y empezar a medir velocidad
+    const now = Date.now();
+    playerTimerStart = now;
+    state.playerQuestionStart = now;         // La velocidad se mide desde aquí
     const wrap = document.getElementById('player-opts-wrap');
     if (wrap) { wrap.style.opacity = '1'; wrap.style.pointerEvents = 'auto'; }
     const waitMsg = document.getElementById('waiting-timer-msg');
