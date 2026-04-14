@@ -1588,7 +1588,9 @@ function playerAnswer(catIdx, qIdx, chosenIdx) {
   if (chosen) chosen.classList.add('selected');
   // Write response to Firebase so MC sees count
   if (db) {
-    const key = state.playerName.replace(/[.#$/[\]]/g, '_') + '_' + Date.now();
+    // Clave única: nombre + timestamp + random → evita colisión con 250 usuarios simultáneos
+    const rand = Math.random().toString(36).slice(2, 7);
+    const key = state.playerName.replace(/[.#$/[\]]/g, '_') + '_' + Date.now() + '_' + rand;
     db.ref(`responses/${catIdx}_${qIdx}/${key}`).set({
       name: state.playerName,
       chosen: chosenIdx,
@@ -1661,10 +1663,19 @@ function initLiveScoresView() {
   let attempts = 0;
   const waitAndListen = () => {
     if (scoresRef) {
+      let lsvThrottle = null;
+      let lsvLastSnap = null;
       scoresRef.on('value', snap => {
-        const val = snap.val();
-        const scores = val ? Object.values(val).sort((a, b) => b.pts - a.pts) : [];
-        renderLiveScores(scores);
+        lsvLastSnap = snap;
+        // Throttle: max 1 render cada 600ms — evita congelar pantalla con 200+ updates seguidos
+        if (lsvThrottle) return;
+        lsvThrottle = setTimeout(() => {
+          lsvThrottle = null;
+          if (!lsvLastSnap) return;
+          const val = lsvLastSnap.val();
+          const scores = val ? Object.values(val).sort((a, b) => b.pts - a.pts) : [];
+          renderLiveScores(scores);
+        }, 600);
       });
     } else if (attempts++ < 20) {
       setTimeout(waitAndListen, 300);
@@ -1694,6 +1705,19 @@ function renderLiveScores(scores) {
       <div class="lsv-pts">${s.pts} pts</div>
     </div>`).join('');
 }
+
+// Limpiar todos los listeners de Firebase al cerrar/recargar la página
+// Reduce conexiones huérfanas en Firebase con 250 usuarios
+window.addEventListener('beforeunload', () => {
+  if (myScoreRef)       myScoreRef.off();
+  if (gameRef)          gameRef.off();
+  if (responseCountRef) responseCountRef.off();
+  if (scoresRef && scoresListenerActive) { scoresRef.off(); scoresListenerActive = false; }
+  stopPtsCountdown();
+  stopPlayerClientTimer();
+  if (mcPtsCountdownInterval) { clearInterval(mcPtsCountdownInterval); mcPtsCountdownInterval = null; }
+  clearTimer();
+});
 
 window.addEventListener('load', () => {
   const params = new URLSearchParams(window.location.search);
