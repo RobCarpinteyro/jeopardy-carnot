@@ -748,6 +748,7 @@ const state = {
   playerQuestionStart: 0,
   playerLastChosenIdx: -1,
   playerLastQPts: 0,
+  playerLockedPts: 0,
 };
 // ════════════════════════════════════════════
 // FIREBASE
@@ -825,16 +826,28 @@ function fbSaveScore(name, pts) {
     return { name: current.name, pts: (current.pts || 0) + pts };
   });
 }
+let scoresListenerActive = false;
+let scoresListenerCallback = null;
 function fbListenScores(callback) {
   if (!scoresRef) {
     callback(lsGetScores());
     return;
   }
+  scoresListenerCallback = callback;
+  if (scoresListenerActive) {
+    // Listener ya existe — solo leer el valor actual sin agregar otro listener
+    scoresRef.once('value', snap => {
+      const val = snap.val();
+      if (!val) { callback([]); return; }
+      callback(Object.values(val).sort((a, b) => b.pts - a.pts));
+    });
+    return;
+  }
+  scoresListenerActive = true;
   scoresRef.on('value', snap => {
     const val = snap.val();
-    if (!val) { callback([]); return; }
-    const arr = Object.values(val).sort((a, b) => b.pts - a.pts);
-    callback(arr);
+    const arr = val ? Object.values(val).sort((a, b) => b.pts - a.pts) : [];
+    if (scoresListenerCallback) scoresListenerCallback(arr);
   });
 }
 function fbResetScores() {
@@ -943,6 +956,12 @@ function renderBoard() {
 // QUESTION (MC)
 // ════════════════════════════════════════════
 function openQuestion(catIdx, qIdx) {
+  const key = `${catIdx}-${qIdx}`;
+  // If already answered, open in review mode (show question + answer, no broadcast)
+  if (state.usedCells.has(key)) {
+    reviewQuestion(catIdx, qIdx);
+    return;
+  }
   const mod = MODULES[state.moduleIdx];
   const cat = mod.categories[catIdx];
   const q = cat.questions[qIdx];
@@ -975,6 +994,35 @@ function openQuestion(catIdx, qIdx) {
   clearTimer();
   state.timerVal = 15;
   updateTimerUI();
+  showScreen('question');
+}
+function reviewQuestion(catIdx, qIdx) {
+  // Read-only review: show question with correct answer revealed, no broadcast, no timer
+  const mod = MODULES[state.moduleIdx];
+  const cat = mod.categories[catIdx];
+  const q = cat.questions[qIdx];
+  state.currentQ = { catIdx, qIdx };
+  state.revealed = true;
+  document.getElementById('q-cat-label').textContent = cat.name + ' — REVISIÓN';
+  document.getElementById('q-pts-label').textContent = q.pts + ' pts';
+  document.getElementById('q-text-display').textContent = q.q;
+  // Hide start/timer controls, show only a back button state
+  document.getElementById('btn-reveal').style.display = 'none';
+  document.getElementById('btn-start-wrap').style.display = 'none';
+  document.getElementById('response-count').textContent = '—';
+  clearTimer();
+  state.timerVal = 0;
+  updateTimerUI();
+  const optsEl = document.getElementById('q-options');
+  optsEl.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('div');
+    btn.className = 'opt-btn' + (i === q.ans ? ' correct' : ' wrong');
+    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span>${esc(opt)}`;
+    btn.id = `opt-mc-${i}`;
+    optsEl.appendChild(btn);
+  });
   showScreen('question');
 }
 let responseCountRef = null;
@@ -1229,12 +1277,15 @@ function copyJoinUrl() {
 // ════════════════════════════════════════════
 // PLAYER LOGIC
 // ════════════════════════════════════════════
-let playerGameListener = null;
+let playerGameListener = false;
 let playerClientTimerInterval = null;
 let playerTimerStart = 0;
 let playerTimerLimit = 15;
+let currentDisplayedPts = 0;
+let ptsCountdownInterval = null;
 function startPlayerListening() {
   if (playerGameListener) return;
+  playerGameListener = true;  // marcar ANTES de llamar — evita doble registro
   fbListenGame(handleGameEvent);
 }
 function handleGameEvent(data) {
@@ -1242,6 +1293,10 @@ function handleGameEvent(data) {
     if (data.moduleIdx !== state.moduleIdx) return;
     state.playerAnswered = false;
     state.playerQuestionStart = 0;           // Se setea al iniciar cronómetro, no antes
+    state.playerLockedPts = 0;
+    state.playerCurrentCatIdx = data.catIdx;
+    state.playerCurrentQIdx = data.qIdx;
+    stopPtsCountdown();
     playerTimerLimit = data.timeLimit || 15;
     // Show question but DON'T start timer yet — waits for timer_start event
     renderPlayerQuestion(data.catIdx, data.qIdx);
@@ -1257,12 +1312,22 @@ function handleGameEvent(data) {
     if (wrap) { wrap.style.opacity = '1'; wrap.style.pointerEvents = 'auto'; }
     const waitMsg = document.getElementById('waiting-timer-msg');
     if (waitMsg) waitMsg.style.display = 'none';
+    const ptsAvail = document.getElementById('player-pts-available');
+    if (ptsAvail) ptsAvail.style.display = 'block';
+    // Get pts from actual question data
+    const _qPts = (state.playerCurrentCatIdx !== undefined && state.playerCurrentQIdx !== undefined)
+      ? MODULES[state.moduleIdx].categories[state.playerCurrentCatIdx].questions[state.playerCurrentQIdx].pts
+      : (state.playerLastQPts || 100);
+    state.playerLastQPts = _qPts;
+    startPtsCountdown(_qPts, data.timeLimit || playerTimerLimit || 15);
     startPlayerClientTimer(data.timeLimit || playerTimerLimit || 15);
   } else if (data.type === 'reveal') {
     stopPlayerClientTimer();
+    stopPtsCountdown();
     showPlayerReveal(data.ans);
   } else if (data.type === 'idle') {
     stopPlayerClientTimer();
+    stopPtsCountdown();
     showPlayerIdle();
   }
 }
@@ -1278,6 +1343,39 @@ function startPlayerClientTimer(secs) {
 }
 function stopPlayerClientTimer() {
   if (playerClientTimerInterval) { clearInterval(playerClientTimerInterval); playerClientTimerInterval = null; }
+}
+function startPtsCountdown(maxPts, secs) {
+  stopPtsCountdown();
+  const minPts = Math.max(20, Math.floor(maxPts * 0.2));
+  currentDisplayedPts = maxPts;
+  const el = document.getElementById('player-pts-counter');
+  if (el) el.textContent = maxPts;
+  const totalDrop = maxPts - minPts;
+  const intervalMs = 100; // update every 100ms for smooth countdown
+  const steps = (secs * 1000) / intervalMs;
+  const dropPerStep = totalDrop / steps;
+  let currentPts = maxPts;
+  ptsCountdownInterval = setInterval(() => {
+    currentPts = Math.max(minPts, currentPts - dropPerStep);
+    currentDisplayedPts = Math.round(currentPts);
+    const counter = document.getElementById('player-pts-counter');
+    if (counter) {
+      counter.textContent = currentDisplayedPts;
+      // Color shift as pts decrease
+      const ratio = (currentPts - minPts) / (maxPts - minPts);
+      if (ratio > 0.5) {
+        counter.style.color = 'var(--gold-light)';
+      } else if (ratio > 0.2) {
+        counter.style.color = '#E67E22';
+      } else {
+        counter.style.color = '#E74C3C';
+      }
+    }
+    if (currentPts <= minPts) stopPtsCountdown();
+  }, intervalMs);
+}
+function stopPtsCountdown() {
+  if (ptsCountdownInterval) { clearInterval(ptsCountdownInterval); ptsCountdownInterval = null; }
 }
 function updatePlayerTimerBar(val, max) {
   const b = document.getElementById('player-timer-bar');
@@ -1300,6 +1398,10 @@ function renderPlayerQuestion(catIdx, qIdx) {
       <div class="player-q-text">${esc(q.q)}</div>
       <div id="player-opts-wrap" style="opacity:0;pointer-events:none;transition:opacity 0.4s ease;">
         <div style="text-align:center;font-size:0.75rem;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.6rem;font-weight:700;" id="waiting-timer-msg">⏳ Esperando inicio del cronómetro…</div>
+        <div id="player-pts-available" style="display:none;text-align:center;margin-bottom:0.7rem;">
+          <span style="font-size:0.7rem;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase;">Puntos disponibles</span><br>
+          <span id="player-pts-counter" style="font-size:2rem;font-weight:900;color:var(--gold-light);line-height:1.1;">${q.pts}</span>
+        </div>
         <div class="player-opts">
           ${q.opts.map((opt, i) => `
             <button class="player-opt" id="popt-${i}" onclick="playerAnswer(${catIdx},${qIdx},${i})">
@@ -1316,6 +1418,9 @@ function playerAnswer(catIdx, qIdx, chosenIdx) {
   state.playerAnswerTime = (Date.now() - state.playerQuestionStart) / 1000;
   state.playerLastChosenIdx = chosenIdx;
   state.playerLastQPts = MODULES[state.moduleIdx].categories[catIdx].questions[qIdx].pts;
+  // Lock in the pts being displayed right now — stop countdown
+  state.playerLockedPts = currentDisplayedPts;
+  stopPtsCountdown();
   document.querySelectorAll('.player-opt').forEach(b => b.disabled = true);
   const chosen = document.getElementById(`popt-${chosenIdx}`);
   if (chosen) chosen.classList.add('selected');
@@ -1342,9 +1447,8 @@ function showPlayerReveal(correctAns) {
   }
   const correct = state.playerLastChosenIdx === correctAns;
   if (correct) {
-    const maxPts = state.playerLastQPts || 100;
-    const speedBonus = Math.max(0, Math.floor(maxPts * (1 - (state.playerAnswerTime / 15))));
-    const earned = Math.max(Math.floor(maxPts * 0.2), speedBonus);
+    // Use the pts that were displayed when player tapped — no post-hoc calculation
+    const earned = state.playerLockedPts || Math.max(20, Math.floor((state.playerLastQPts || 100) * 0.2));
     state.playerScore += earned;
     document.getElementById('player-pts-display').textContent = state.playerScore + ' pts';
     fbSaveScore(state.playerName, earned);
