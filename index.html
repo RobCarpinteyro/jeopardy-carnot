@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -508,7 +507,10 @@ body {
     <div class="q-box">
       <div class="q-meta">
         <div class="q-cat" id="q-cat-label"></div>
-        <div class="q-pts-badge" id="q-pts-label"></div>
+        <div style="text-align:right;">
+          <div style="font-size:0.55rem;color:var(--dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:2px;" id="q-pts-sublabel" hidden>Puntos disponibles</div>
+          <div class="q-pts-badge" id="q-pts-label" style="transition:background 0.3s,color 0.3s;font-size:1.15rem;padding:0.25rem 0.85rem;"></div>
+        </div>
       </div>
       <div style="text-align:center;">
         <div class="timer-display" id="timer-display">15</div>
@@ -967,8 +969,14 @@ function openQuestion(catIdx, qIdx) {
   const q = cat.questions[qIdx];
   state.currentQ = { catIdx, qIdx };
   state.revealed = false;
+  if (mcPtsCountdownInterval) { clearInterval(mcPtsCountdownInterval); mcPtsCountdownInterval = null; }
   document.getElementById('q-cat-label').textContent = cat.name;
-  document.getElementById('q-pts-label').textContent = q.pts + ' pts';
+  const ptsBadge = document.getElementById('q-pts-label');
+  ptsBadge.textContent = q.pts + ' pts';
+  ptsBadge.style.background = '';
+  ptsBadge.style.color = '';
+  const ptsSub = document.getElementById('q-pts-sublabel');
+  if (ptsSub) ptsSub.setAttribute('hidden', '');
   document.getElementById('q-text-display').textContent = q.q;
   document.getElementById('btn-reveal').style.display = 'none';
   document.getElementById('btn-start-wrap').style.display = 'block';
@@ -1133,6 +1141,7 @@ function updateStatsBars(val, catIdx, qIdx) {
 function revealAnswer() {
   if (state.revealed) return;
   state.revealed = true;
+  if (mcPtsCountdownInterval) { clearInterval(mcPtsCountdownInterval); mcPtsCountdownInterval = null; }
   clearTimer();
   if (responseCountRef) responseCountRef.off();
   const mod = MODULES[state.moduleIdx];
@@ -1147,6 +1156,7 @@ function revealAnswer() {
   fbBroadcast({ type: 'reveal', catIdx, qIdx, ans: q.ans });
 }
 function backToBoard() {
+  if (mcPtsCountdownInterval) { clearInterval(mcPtsCountdownInterval); mcPtsCountdownInterval = null; }
   clearTimer();
   if (state.currentQ && !state.revealed) revealAnswer();
   renderBoard();
@@ -1174,10 +1184,38 @@ function startTimerManual() {
     const snd = new Audio('./start.mp3');
     snd.play().catch(() => {});
   } catch(e) {}
+  // Start pts countdown on MC screen (q-pts-label)
+  startMCPtsCountdown(15);
   // Start local timer on MC
   startTimer(15);
   // Broadcast timer_start so all players begin their countdowns simultaneously
   fbBroadcast({ type: 'timer_start', timeLimit: 15 });
+}
+function startMCPtsCountdown(secs) {
+  if (mcPtsCountdownInterval) { clearInterval(mcPtsCountdownInterval); mcPtsCountdownInterval = null; }
+  const { catIdx, qIdx } = state.currentQ || {};
+  if (catIdx === undefined) return;
+  const maxPts = MODULES[state.moduleIdx].categories[catIdx].questions[qIdx].pts;
+  const minPts = Math.max(20, Math.floor(maxPts * 0.2));
+  const totalDrop = maxPts - minPts;
+  const intervalMs = 100;
+  const steps = (secs * 1000) / intervalMs;
+  const dropPerStep = totalDrop / steps;
+  let currentPts = maxPts;
+  const badge = document.getElementById('q-pts-label');
+  const sublabel = document.getElementById('q-pts-sublabel');
+  if (sublabel) sublabel.removeAttribute('hidden');
+  mcPtsCountdownInterval = setInterval(() => {
+    currentPts = Math.max(minPts, currentPts - dropPerStep);
+    const rounded = Math.round(currentPts);
+    if (badge) {
+      badge.textContent = rounded + ' pts';
+      const ratio = (currentPts - minPts) / (maxPts - minPts || 1);
+      badge.style.background = ratio > 0.5 ? 'var(--gold)' : ratio > 0.2 ? '#E67E22' : '#E74C3C';
+      badge.style.color = ratio > 0.2 ? 'var(--navy)' : 'var(--white)';
+    }
+    if (currentPts <= minPts) { clearInterval(mcPtsCountdownInterval); mcPtsCountdownInterval = null; }
+  }, intervalMs);
 }
 function startTimer(secs) {
   clearTimer();
@@ -1283,6 +1321,7 @@ let playerTimerStart = 0;
 let playerTimerLimit = 15;
 let currentDisplayedPts = 0;
 let ptsCountdownInterval = null;
+let mcPtsCountdownInterval = null;
 function startPlayerListening() {
   if (playerGameListener) return;
   playerGameListener = true;  // marcar ANTES de llamar — evita doble registro
