@@ -552,6 +552,7 @@ body {
     <div class="module-selector">
       <button class="mod-btn active" onclick="selectModule(0)">Módulo 1 &nbsp;·&nbsp; Reflujo + Estreñimiento</button>
       <button class="mod-btn" onclick="selectModule(1)">Módulo 2 &nbsp;·&nbsp; Microbiota + SII</button>
+      <button class="mod-btn" onclick="selectModule(2)">Módulo 3 &nbsp;·&nbsp; SII — Roma V</button>
     </div>
     <div class="btn-group">
       <button class="btn btn-primary" onclick="goMC()">ENTRAR AL TABLERO →</button>
@@ -711,6 +712,7 @@ body {
   <div style="display:flex;gap:0.5rem;margin-bottom:1.2rem;">
     <button id="qr-mod-btn-0" class="mod-btn active" onclick="switchQR(0)">Módulo 1</button>
     <button id="qr-mod-btn-1" class="mod-btn" onclick="switchQR(1)">Módulo 2</button>
+    <button id="qr-mod-btn-2" class="mod-btn" onclick="switchQR(2)">Módulo 3</button>
   </div>
   <div id="qr-module-label" style="font-size:0.75rem;color:var(--gold);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.8rem;"></div>
   <div class="qr-box" id="qr-container"></div>
@@ -872,6 +874,46 @@ const MODULES = [
         { pts:300, q:"Mujer 20 años, 2 años con dolor abdominal y evacuaciones Bristol 1, cada 4 días. Pujo excesivo, evacuación incompleta, en escíbalos. Tránsito lento con marcadores; MAR: con aumento de presión esfinteriana con el esfuerzo defecatorio. ¿Cuál es su conducta?", opts:["Linaclotida + biofeedback","Prucaloprida + macrogol","Incremento de fibra dietaria + biofeedback","Menta piperita + macrogol"], ans:0 },
         { pts:400, q:"Hombre 35 años, dolor abdominal que se presenta con las evacuaciones, diarrea 1 vez al día, Bristol 7 en el 30% de las evacuaciones, distensión objetiva postprandial tardía, exceso de gas. Sin signos de alarma. Pobre respuesta a loperamida y antiespasmódicos con simeticona. ¿Qué prescribe?", opts:["Dieta baja en FODMAP + Carbón activado + lidamidina","Dieta NICE + Colestiramina","Dieta baja en FODMAP + Rifaximina","Dieta mediterránea + Probióticos"], ans:2 },
         { pts:500, q:"Mujer 41 años, dolor abdominal de 1.5 años, no asociado a la evacuación. Apendicectomía y colecistectomía. Signo de Carnet negativo. Sin datos de alarma. EGD y colonoscopia negativas, TAC contrastada normal. Perfil metabólico y de porfirinas negativos. Comorbilidades: cefalea, ataques de pánico, cistitis intersticial. Multitratada con antiespasmódicos, ansiolíticos, medicina alternativa sin mejoría. ¿Cuál es su recomendación?", opts:["Parches de buprenorfina para el dolor","Tricíclico + terapia cognitivo conductual","Interconsulta con algólogo","Respiración diafragmática + venlafaxina"], ans:1 },
+      ]},
+    ]
+  },
+  {
+    name: "Módulo 3: SII — Roma V",
+    categories: [
+      { name: "Epidemiología y Roma V", questions: [
+        { pts:100, q:"La prevalencia mundial estimada del SII utilizando criterios modernos es aproximadamente del:", opts:["1%","4%","15%",">40%"], ans:1 },
+        { pts:200, q:"La clasificación de los subtipos de SII (SII-D, SII-C, SII-M y SII-I) se basa principalmente en:", opts:["Frecuencia diaria de evacuaciones","Puntaje de Wexner","Velocidad de tránsito intestinal","Escala de Bristol"], ans:3 },
+        { pts:300, q:"El grupo etario en el que con mayor frecuencia inicia el SII es:", opts:["Infancia","Adultos jóvenes","Mayores de 50 años","Recién nacidos"], ans:1 },
+        { pts:400, q:"El SII incrementa principalmente:", opts:["Mortalidad","Frecuencia de apendicitis","Utilización de servicios médicos","Riesgo de diverticulosis"], ans:2 },
+        { pts:500, q:"Para cumplir criterios de Roma V, el dolor o malestar abdominal debe presentarse en promedio:", opts:["Un día al mes durante los últimos 3 meses","Tres días al mes durante los últimos 3 meses","Dos veces por semana durante los últimos 3 meses","Tres veces por semana durante los últimos 3 meses"], ans:1 },
+      ]},
+      { name: "Diagnóstico", questions: [
+        { pts:100, q:"Paciente de 38 años presenta dolor abdominal recurrente, 1 vez por semana, asociado a la defecación y cambios en la frecuencia de las evacuaciones desde hace 8 meses. Sin pérdida de peso, anemia ni rectorragia. El diagnóstico más probable es:", opts:["Parasitosis intestinal","Colitis microscópica","Síndrome de intestino irritable","Cáncer colorrectal"], ans:2 },
+        { pts:200, q:"¿Cuál de los siguientes hallazgos constituye un dato de alarma que obliga a ampliar el estudio de un paciente con sospecha de SII?", opts:["Distensión abdominal","Dolor abdominal con la defecación","Pérdida involuntaria de peso de >10%","Pujo defecatorio y evacuación incompleta"], ans:2 },
+        { pts:300, q:"¿Cuál es el estudio inicial más apropiado en un adulto joven con sospecha de SII sin datos de alarma?", opts:["Colonoscopia","Criterios clínicos","Tomografía abdominal","Pruebas de aliento"], ans:1 },
+        { pts:400, q:"¿Qué enfermedad debe investigarse en pacientes con criterios de Roma V para SII con diarrea que no responde a tratamiento de primera y segunda línea?", opts:["Diverticulosis","Apendicitis","Colitis pseudomembranosa","Enfermedad celíaca"], ans:3 },
+        { pts:500, q:"¿Cuál biomarcador ayuda a diferenciar SII de enfermedad inflamatoria intestinal?", opts:["Calprotectina fecal","PCR ultrasensible","Antígeno carcinoembrionario","Lactoferrina fecal"], ans:0 },
+      ]},
+      { name: "Fisiopatología", questions: [
+        { pts:100, q:"¿Cuál mecanismo NO participa de forma importante en la fisiopatología del SII?", opts:["Hipersensibilidad visceral","Alteración del eje intestino-cerebro","Trastornos de la motilidad intestinal","Inflamación autoinmune de la mucosa intestinal"], ans:3 },
+        { pts:200, q:"¿Cómo se denomina la respuesta dolorosa provocada por la distensión rectal en pacientes con SII, que se presenta a volúmenes menores que en individuos sanos?", opts:["Alodinia mecánica","Hipersensibilidad visceral","Sensibilización central","Nocicepción exacerbada"], ans:1 },
+        { pts:300, q:"En relación a la permeabilidad intestinal alterada en SII, ¿cuál de las siguientes opciones es la más consistente con los estudios clínicos?", opts:["La prueba lactulosa/manitol aumentada es concluyente","Ocurre en la mayoría de los subtipos de SII","Es un mecanismo fisiopatológico que puede ocurrir en el SII","Los probióticos corrigen el problema por incremento de expresión de ocludina"], ans:2 },
+        { pts:400, q:"¿Cuál es un género bacteriano aumentado en la microbiota intestinal de los pacientes con SII?", opts:["Bifidobacterium","Faecalobacterium","Enterobacteriaceae","Todos"], ans:2 },
+        { pts:500, q:"¿En qué porcentaje de pacientes con SII-D la diarrea por sales biliares es responsable de los síntomas?", opts:["Menos del 10%","En el 20 al 40%","En la mitad de los casos","En >70%"], ans:1 },
+      ]},
+      { name: "Tratamiento 1", questions: [
+        { pts:100, q:"¿Cuál intervención dietética tiene la mayor evidencia para pacientes seleccionados con SII?", opts:["Dieta sin gluten","Dieta baja en FODMAP","Dieta mediterránea","Dieta vegetariana"], ans:1 },
+        { pts:200, q:"¿Cuál medicamento ha demostrado beneficio en pacientes con SII con diarrea predominante?", opts:["Loperamida","Lidamidina","Diciclomina","Mesalazina"], ans:0 },
+        { pts:300, q:"En pacientes con SII y estreñimiento predominante, un tratamiento apropiado es:", opts:["Salvado","Polietilenglicol (PEG)","Lactulosa","Metronidazol"], ans:1 },
+        { pts:400, q:"¿Cuáles son los fármacos de primera línea para el manejo del dolor en SII?", opts:["Antidepresivos tricíclicos","Opiáceos","Antiespasmódicos","Ligandos alfa 2 delta"], ans:2 },
+        { pts:500, q:"¿Cuál es la recomendación de las Guías Internacionales respecto al uso de probióticos en SII?", opts:["La evidencia es controversial","Usarlos únicamente como terapia adyuvante","Indicarlos por períodos cortos (1 mes), si no son útiles suspenderlos","Todas"], ans:3 },
+      ]},
+      { name: "Tratamiento 2", questions: [
+        { pts:100, q:"¿Cuáles son los efectos del uso de alfa-galactosidasa en el manejo del SII?", opts:["Mejora el dolor abdominal","Mejora la distensión y el meteorismo","Mejora la frecuencia y características de las evacuaciones","Produce mejoría global del SII"], ans:1 },
+        { pts:200, q:"¿Cuál de los siguientes fármacos es agonista de opiáceos, inhibidor de canales de calcio y bloqueador de canales de potasio en el intestino?", opts:["Eluxalodina","Mebeverina","Trimebutina","Plecanatida"], ans:2 },
+        { pts:300, q:"Mujer 32 años, 9 meses con dolor que alivia con la defecación, evacuaciones Bristol 2 en el 20% de las evacuaciones anormales, distensión objetiva y meteorismo. Sin signos de alarma. ¿Cuál es su conducta?", opts:["Dieta NICE + bromuro de pinaverio + respiración diafragmática","Dieta baja en FODMAP + trimebutina con simeticona + ejercicios hipopresivos","Dieta baja en gluten + alverina con simeticona + respiración diafragmática","Dieta baja en FODMAP + Loperamida + sertralina"], ans:1 },
+        { pts:400, q:"Mujer 20 años, 2 años con dolor abdominal y evacuaciones Bristol 1, cada 4 días. Pujo excesivo, evacuación incompleta, en escíbalos. Tránsito lento con marcadores; MAR: con aumento de presión esfinteriana con el esfuerzo defecatorio. ¿Cuál es su conducta?", opts:["Linaclotida + biofeedback","Cinitaprida + macrogol","Incremento de fibra dietaria + biofeedback","Menta piperita + macrogol"], ans:0 },
+        { pts:500, q:"Hombre 35 años, dolor abdominal que se presenta con las evacuaciones, diarrea 1 vez al día, Bristol 7 en el 30% de las evacuaciones, distensión objetiva postprandial tardía, exceso de gas. Sin signos de alarma. Pobre respuesta a loperamida y antiespasmódicos con simeticona. ¿Qué prescribe?", opts:["Dieta baja en FODMAP + Carbón activado + lidamidina","Dieta NICE + Colestiramina","Dieta baja en FODMAP + Rifaximina","Dieta mediterránea + Probióticos"], ans:2 },
       ]},
     ]
   }
@@ -1463,7 +1505,7 @@ function switchQR(idx) {
 
 function renderQR(idx) {
   const url = moduleUrl(idx);
-  const labels = ['Módulo 1 — Reflujo + Estreñimiento', 'Módulo 2 — Microbiota + SII'];
+  const labels = ['Módulo 1 — Reflujo + Estreñimiento', 'Módulo 2 — Microbiota + SII', 'Módulo 3 — SII · Roma V'];
   document.getElementById('qr-module-label').textContent = labels[idx];
   document.getElementById('qr-url-display').textContent = url;
   const container = document.getElementById('qr-container');
