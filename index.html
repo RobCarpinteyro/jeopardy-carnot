@@ -1833,7 +1833,7 @@ window.addEventListener('load', () => {
   document.getElementById('overlay-name').classList.remove('show');
   autoConnectFirebase();
   const mod = params.get('module');
-  if (mod === '0' || mod === '1') {
+  if (mod === '0' || mod === '1' || mod === '2') {
     // Participante llegó desde QR: ocultar landing, seleccionar módulo y entrar directo
     const idx = parseInt(mod);
     state.moduleIdx = idx;
