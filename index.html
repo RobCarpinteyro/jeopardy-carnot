@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Gastrópardy!</title>
+<title>JeoparSII!</title>
 <!-- Google Fonts: Montserrat -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -554,6 +554,171 @@ body {
 /* Ocultar badge fijo cuando el jugador está en su pantalla — la info está en el header */
 #screen-player.active ~ #conn-status,
 body.player-active #conn-status { display: none; }
+
+/* ══════════════════════════════════════════════
+   PONENTE MODE — tablero reactivo (proyector)
+══════════════════════════════════════════════ */
+body.ponente-mode #btn-start-wrap,
+body.ponente-mode #btn-reveal,
+body.ponente-mode .q-actions { display: none !important; }
+body.ponente-mode .board-header .btn-q-tertiary,
+body.ponente-mode .board-header .btn-q-secondary { pointer-events: none; opacity: 0.4; }
+
+/* ══════════════════════════════════════════════
+   PRODUCTOR PANEL
+══════════════════════════════════════════════ */
+#screen-productor {
+  background: var(--navy);
+  display: flex;
+  flex-direction: column;
+}
+.prod-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.85rem 1rem 0.65rem;
+  background: var(--navy-mid);
+  border-bottom: 2px solid var(--gold);
+  flex-shrink: 0;
+}
+.prod-title {
+  font-size: 1.1rem; font-weight: 900; color: var(--gold-light);
+  letter-spacing: 0.08em;
+}
+.prod-subtitle {
+  font-size: 0.58rem; color: var(--dim); letter-spacing: 0.1em;
+  margin-top: 1px; text-transform: uppercase;
+}
+.prod-stats-bar {
+  display: flex; align-items: center; gap: 0.7rem;
+  padding: 0.35rem 1rem;
+  background: rgba(10,22,50,0.8);
+  border-bottom: 1px solid rgba(245,200,66,0.12);
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+.prod-sep { color: var(--dim); }
+.prod-reset-btn {
+  margin-left: auto; background: none; border: 1px solid rgba(255,255,255,0.18);
+  color: var(--dim); font-size: 0.72rem; padding: 0.15rem 0.55rem;
+  border-radius: 5px; cursor: pointer; font-family: inherit;
+}
+.prod-state-box {
+  padding: 0.6rem 1rem 0.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0; background: rgba(255,255,255,0.02);
+}
+.prod-state-tag {
+  font-size: 0.57rem; color: var(--dim); text-transform: uppercase;
+  letter-spacing: 0.12em; margin-bottom: 1px;
+}
+.prod-state-name {
+  font-size: 0.95rem; font-weight: 900; color: var(--white);
+}
+#prod-board-wrap { flex: 1; overflow-y: auto; padding: 0.65rem; }
+.prod-board-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+}
+.prod-cat-header {
+  background: linear-gradient(160deg, rgba(26,41,84,0.95), var(--navy-card));
+  border: 1px solid rgba(212,160,23,0.35);
+  border-radius: 5px; padding: 0.35rem 0.18rem;
+  text-align: center; font-size: 0.48rem; font-weight: 800;
+  color: var(--gold-light); letter-spacing: 0.02em; text-transform: uppercase;
+  line-height: 1.25; min-height: 44px;
+  display: flex; align-items: center; justify-content: center;
+}
+.prod-cell {
+  border-radius: 5px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem; font-weight: 900; color: rgba(255,255,255,0.95);
+  min-height: 42px; cursor: pointer; border: none; font-family: inherit;
+  transition: transform 0.1s;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.55);
+}
+.prod-cell:active:not(:disabled) { transform: scale(0.87); }
+.prod-cell.prod-used {
+  opacity: 0.2; pointer-events: none;
+  background: rgba(10,22,40,0.8) !important;
+}
+.prod-col-a { background: linear-gradient(135deg, #46cec7, #2da8a2); }
+.prod-col-b { background: linear-gradient(135deg, #12b8b1, #0090a0); }
+.prod-col-c { background: linear-gradient(135deg, #1a90d4, #0066b0); }
+.prod-col-d { background: linear-gradient(135deg, #3070c0, #1850a0); }
+.prod-col-e { background: linear-gradient(135deg, #2a4aa0, #152880); }
+/* Question panel */
+#prod-question-wrap { flex: 1; overflow-y: auto; padding: 1rem; }
+.prod-q-cat {
+  font-size: 0.66rem; color: var(--dim); text-transform: uppercase;
+  letter-spacing: 0.08em; margin-bottom: 0.3rem;
+}
+.prod-q-pts {
+  display: inline-block; background: var(--gold); color: var(--navy);
+  font-weight: 900; font-size: 0.8rem; padding: 0.1rem 0.65rem;
+  border-radius: 10px; margin-bottom: 0.7rem;
+}
+.prod-q-text {
+  font-size: 0.88rem; font-weight: 700; color: var(--white);
+  line-height: 1.55; margin-bottom: 0.85rem;
+}
+.prod-q-opts { display: flex; flex-direction: column; gap: 0.38rem; }
+.prod-q-opt {
+  padding: 0.48rem 0.7rem; border-radius: 7px; font-size: 0.76rem;
+  color: var(--white); background: var(--navy-card);
+  border: 1px solid rgba(255,255,255,0.09); line-height: 1.4;
+  transition: opacity 0.35s;
+}
+.prod-q-opt.prod-q-correct {
+  background: rgba(26,155,95,0.28) !important;
+  border-color: rgba(46,204,113,0.5) !important;
+  color: #2ECC71; font-weight: 800;
+}
+/* Timer display */
+#prod-timer-display {
+  text-align: center; font-size: 3.2rem; font-weight: 900;
+  color: var(--gold-light); padding: 0.4rem 0;
+  letter-spacing: -0.02em; transition: color 0.5s;
+}
+/* Dock */
+.prod-dock {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+  padding: 0.7rem 1rem calc(0.7rem + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, rgba(10,22,40,0.98) 60%, transparent);
+  display: flex; flex-direction: column; gap: 0.42rem;
+}
+.prod-btn-primary {
+  width: 100%; padding: 1rem; border: none; border-radius: 14px;
+  background: linear-gradient(135deg, #F5C842 0%, #D4A017 100%);
+  color: var(--navy); font-family: inherit; font-weight: 900;
+  font-size: 1rem; letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer; box-shadow: 0 6px 24px rgba(212,160,23,0.42);
+  transition: transform 0.08s;
+}
+.prod-btn-primary:active { transform: scale(0.97); }
+.prod-btn-primary.prod-green {
+  background: linear-gradient(135deg, #2ECC71 0%, #1A9B5F 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 24px rgba(26,155,95,0.42) !important;
+}
+.prod-btn-primary.prod-pulse {
+  animation: prod-pulse 0.9s ease-in-out infinite;
+}
+@keyframes prod-pulse {
+  0%, 100% { box-shadow: 0 6px 24px rgba(26,155,95,0.42); }
+  50%       { box-shadow: 0 8px 36px rgba(26,155,95,0.78); }
+}
+.prod-btn-secondary-dock {
+  width: 100%; padding: 0.78rem; border: 1.5px solid rgba(212,160,23,0.45);
+  border-radius: 12px; background: var(--navy-card);
+  color: var(--gold-light); font-family: inherit; font-weight: 700;
+  font-size: 0.88rem; cursor: pointer; transition: transform 0.08s;
+}
+.prod-btn-secondary-dock:active { transform: scale(0.97); }
+.prod-btn-back {
+  width: 100%; padding: 0.5rem; border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px; background: transparent; color: var(--dim);
+  font-family: inherit; font-size: 0.76rem; font-weight: 600; cursor: pointer;
+}
+.prod-btn-back:active { background: rgba(255,255,255,0.05); }
 </style>
 </head>
 <body>
@@ -564,14 +729,13 @@ body.player-active #conn-status { display: none; }
 <div id="screen-landing" class="screen active">
   <div class="landing-top">
     <div class="logo-eyebrow">Carnot · Educación Médica Continua</div>
-    <div class="logo-title">GASTRÓPARDY!</div>
-    <div class="logo-byline">by Dr. Miguel Angel Valdovinos</div>
+    <div class="logo-title">JeoparSII!</div>
+    <div class="logo-byline">SII — Roma V · Summit Gastro Cancún 2026</div>
     <div class="logo-rule"></div>
-    <div class="logo-sub">Panel del Operador — Selecciona el módulo</div>
+    <div class="logo-sub">SII — Roma V &nbsp;·&nbsp; Línea Libertrim</div>
     <div class="module-selector">
-      <button class="mod-btn active" onclick="selectModule(0)">Módulo 1 &nbsp;·&nbsp; Reflujo + Estreñimiento</button>
-      <button class="mod-btn" onclick="selectModule(1)">Módulo 2 &nbsp;·&nbsp; Microbiota + SII</button>
-      <button class="mod-btn" onclick="selectModule(2)">Módulo 3 &nbsp;·&nbsp; SII — Roma V</button>
+      <!-- Módulo 1 y 2 ocultos temporalmente — solo Módulo 3 activo -->
+      <button class="mod-btn active" onclick="selectModule(2)" style="pointer-events:none;">Módulo 3 &nbsp;·&nbsp; SII — Roma V</button>
     </div>
     <div class="btn-group">
       <button class="btn btn-primary" onclick="goMC()">ENTRAR AL TABLERO →</button>
@@ -624,7 +788,7 @@ body.player-active #conn-status { display: none; }
 <div id="screen-board" class="screen">
   <div class="board-header">
     <div>
-      <h1>GASTRÓPARDY!</h1>
+      <h1>JeoparSII!</h1>
       <div style="font-size:0.7rem;color:var(--dim);" id="board-module-label"></div>
     </div>
     <div style="display:flex;gap:0.45rem;align-items:center;flex-wrap:wrap;">
@@ -633,6 +797,11 @@ body.player-active #conn-status { display: none; }
       <button class="btn-q-tertiary" style="font-size:0.8rem;" onclick="resetBoard()">🔄 Reiniciar</button>
       <button class="btn-q-tertiary" style="font-size:0.8rem;" onclick="showScreen('landing')">← Salir</button>
     </div>
+  </div>
+  <div style="display:flex;gap:1.2rem;align-items:center;padding:0.3rem 1rem 0.25rem;background:rgba(10,22,50,0.7);border-bottom:1px solid rgba(245,200,66,0.15);font-size:0.72rem;font-weight:700;letter-spacing:0.05em;">
+    <span>🟢 <span id="board-connected-count">0</span> conectados</span>
+    <span style="color:var(--dim);">|</span>
+    <span>✅ <span id="board-answered-count">0</span> contestadas</span>
   </div>
   <div class="board-grid" id="board-grid"></div>
 </div>
@@ -696,10 +865,10 @@ body.player-active #conn-status { display: none; }
   <div class="player-inner">
     <div id="player-content" style="width:100%;">
       <div class="player-waiting">
-        <div style="font-size:clamp(1.6rem,6vw,2.4rem);font-weight:900;letter-spacing:0.06em;line-height:1;margin-bottom:0.15rem;background:linear-gradient(135deg,#F5C842 0%,#D4A017 50%,#F5C842 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">GASTRÓPARDY!</div>
-        <div style="font-size:0.72rem;color:rgba(245,200,66,0.55);letter-spacing:0.1em;font-style:italic;margin-bottom:1.2rem;">by Dr. Miguel Ángel Valdovinos</div>
+        <div style="font-size:clamp(1.6rem,6vw,2.4rem);font-weight:900;letter-spacing:0.06em;line-height:1;margin-bottom:0.15rem;background:linear-gradient(135deg,#F5C842 0%,#D4A017 50%,#F5C842 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">JeoparSII!</div>
+        <div style="font-size:0.72rem;color:rgba(245,200,66,0.55);letter-spacing:0.1em;font-style:italic;margin-bottom:1.2rem;">SII — Roma V · Summit Gastro Cancún 2026</div>
         <span class="dot"></span> Conectado — esperando pregunta…<br>
-        <span style="font-size:0.82rem;">El Dr. Valdovinos mostrará la siguiente pregunta</span><br><br>
+        <span style="font-size:0.82rem;">El Productor abrirá la siguiente pregunta</span><br><br>
         <div style="background:rgba(212,160,23,0.1);border:1px solid rgba(212,160,23,0.3);border-radius:10px;padding:0.75rem 1rem;margin:0.5rem auto 0;text-align:center;max-width:280px;">
           <div style="font-size:0.9rem;margin-bottom:0.2rem;">✈️</div>
           <div style="font-size:0.78rem;color:var(--gold-light);font-weight:700;margin-bottom:0.15rem;">Top 3 de este módulo → DDW 2027</div>
@@ -727,9 +896,10 @@ body.player-active #conn-status { display: none; }
   <p style="color:var(--dim);font-size:0.82rem;margin-bottom:1.1rem;">Proyecta esta pantalla para que los participantes escaneen</p>
   <!-- Selector de módulo -->
   <div style="display:flex;gap:0.5rem;margin-bottom:1.2rem;">
-    <button id="qr-mod-btn-0" class="mod-btn active" onclick="switchQR(0)">Módulo 1</button>
-    <button id="qr-mod-btn-1" class="mod-btn" onclick="switchQR(1)">Módulo 2</button>
-    <button id="qr-mod-btn-2" class="mod-btn" onclick="switchQR(2)">Módulo 3</button>
+    <!-- Módulos 1 y 2 ocultos — solo Módulo 3 activo -->
+    <button id="qr-mod-btn-0" class="mod-btn" onclick="switchQR(0)" style="display:none;">Módulo 1</button>
+    <button id="qr-mod-btn-1" class="mod-btn" onclick="switchQR(1)" style="display:none;">Módulo 2</button>
+    <button id="qr-mod-btn-2" class="mod-btn active" onclick="switchQR(2)">Módulo 3 — SII Roma V</button>
   </div>
   <div id="qr-module-label" style="font-size:0.75rem;color:var(--gold);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.8rem;"></div>
   <div class="qr-box" id="qr-container"></div>
@@ -758,8 +928,8 @@ body.player-active #conn-status { display: none; }
      OVERLAYS
 ═══════════════════════════════════ -->
 <div id="overlay-name" class="overlay" style="overflow-y:auto;">
-  <div style="font-size:clamp(1.8rem,7vw,2.8rem);font-weight:900;color:var(--gold-light);letter-spacing:0.06em;line-height:1;margin-bottom:0.15rem;background:linear-gradient(135deg,#F5C842 0%,#D4A017 50%,#F5C842 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">GASTRÓPARDY!</div>
-  <div style="font-size:0.75rem;color:rgba(245,200,66,0.6);letter-spacing:0.12em;font-style:italic;margin-bottom:0.9rem;">by Dr. Miguel Ángel Valdovinos</div>
+  <div style="font-size:clamp(1.8rem,7vw,2.8rem);font-weight:900;color:var(--gold-light);letter-spacing:0.06em;line-height:1;margin-bottom:0.15rem;background:linear-gradient(135deg,#F5C842 0%,#D4A017 50%,#F5C842 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">JeoparSII!</div>
+  <div style="font-size:0.75rem;color:rgba(245,200,66,0.6);letter-spacing:0.12em;font-style:italic;margin-bottom:0.9rem;">SII — Roma V · Summit Gastro Cancún 2026</div>
   <div style="width:40px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 1rem;"></div>
 
   <!-- PREMIO HERO -->
@@ -939,8 +1109,9 @@ const MODULES = [
 // STATE
 // ════════════════════════════════════════════
 const state = {
-  moduleIdx: 0,
+  moduleIdx: 2,   // Módulo 3 activo — SII Roma V
   role: null,
+  isPonente: false,   // true → tablero reactivo (no broadcast, reacciona a Firebase)
   playerName: '',
   playerScore: 0,
   usedCells: new Set(),
@@ -972,6 +1143,22 @@ const FIREBASE_CONFIG = {
 let db = null;
 let gameRef = null;
 let scoresRef = null;
+let playersRef = null;
+let myPlayerRef = null;
+
+/* ─── UID persistente (reconexión automática) ─────────────────────── */
+function getOrCreateUID() {
+  try {
+    let uid = localStorage.getItem('gastro_uid');
+    if (!uid) {
+      uid = 'p-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
+      localStorage.setItem('gastro_uid', uid);
+    }
+    return uid;
+  } catch(_) {
+    return 'p-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
+  }
+}
 
 function autoConnectFirebase() {
   try {
@@ -981,6 +1168,7 @@ function autoConnectFirebase() {
     db = firebase.database();
     gameRef = db.ref('game');
     scoresRef = db.ref('scores');
+    playersRef = db.ref('players');
     setConnStatus('connected', '🟢 Conectado');
     return true;
   } catch(e) {
@@ -1010,7 +1198,7 @@ function setConnStatus(cls, text) {
 // FIREBASE BROADCAST / LISTEN
 // ════════════════════════════════════════════
 function fbBroadcast(data) {
-  if (!gameRef) return;
+  if (!gameRef || state.isPonente) return;  // Ponente nunca emite — solo escucha
   gameRef.set({ ...data, ts: firebase.database.ServerValue.TIMESTAMP });
 }
 function fbListenGame(callback) {
@@ -1059,8 +1247,9 @@ function fbListenScores(callback) {
 function fbResetScores() {
   if (!scoresRef) { localStorage.removeItem('jeopardy_scores'); return; }
   scoresRef.remove();
-  // Limpiar todas las respuestas acumuladas también
   if (db) db.ref('responses').remove();
+  if (db) db.ref('players').remove();    // limpiar presencias al reiniciar
+  if (db) db.ref('answered').remove();   // limpiar registro de celdas usadas
 }
 // localStorage fallback
 function lsGetScores() {
@@ -1120,17 +1309,38 @@ function confirmName() {
   if (name.split(/\s+/).length < 2) { showNameError('Escribe nombre Y apellido para continuar.'); return; }
   const err = document.getElementById('name-error');
   if (err) err.remove();
+  activatePlayer(name, state.moduleIdx);
+}
+
+function activatePlayer(name, moduleIdx) {
   state.playerName = name;
   state.playerScore = 0;
+  state.moduleIdx = moduleIdx;
+  state.role = 'player';
+
+  // Persistir en localStorage para reconexión automática
+  try {
+    localStorage.setItem('gastro_name', name);
+    localStorage.setItem('gastro_module', String(moduleIdx));
+  } catch(_) {}
+
+  // Actualizar header del jugador
   document.getElementById('overlay-name').classList.remove('show');
   document.getElementById('player-name-display').textContent = name;
   document.getElementById('player-pts-display').textContent = '0 pts';
-  const modName = MODULES[state.moduleIdx].name;
   const modText = document.getElementById('player-module-text');
-  if (modText) modText.textContent = modName;
-  state.role = 'player';
+  if (modText) modText.textContent = MODULES[moduleIdx].name;
+
   showScreen('player');
-  // Cargar score existente en Firebase (por si el jugador recarga o ya tiene puntos)
+
+  // Registrar presencia en Firebase con UID
+  if (playersRef) {
+    const uid = getOrCreateUID();
+    myPlayerRef = playersRef.child(uid);
+    myPlayerRef.set({ name, moduleIdx, connected: true });
+    myPlayerRef.child('connected').onDisconnect().set(false);
+  }
+
   fbLoadAndListenMyScore(name);
   startPlayerListening();
 }
@@ -1152,9 +1362,23 @@ function fbLoadAndListenMyScore(name) {
 // ════════════════════════════════════════════
 // BOARD
 // ════════════════════════════════════════════
+let boardConnectedRef = null;
+function startBoardStats() {
+  if (!playersRef) return;
+  if (boardConnectedRef) boardConnectedRef.off();
+  boardConnectedRef = playersRef;
+  boardConnectedRef.on('value', snap => {
+    const val = snap.val() || {};
+    const connected = Object.values(val).filter(p => p.connected === true).length;
+    const el = document.getElementById('board-connected-count');
+    if (el) el.textContent = connected;
+  });
+}
+
 function renderBoard() {
   const mod = MODULES[state.moduleIdx];
   document.getElementById('board-module-label').textContent = mod.name;
+  startBoardStats();
   const grid = document.getElementById('board-grid');
   grid.innerHTML = '';
   mod.categories.forEach(cat => {
@@ -1215,10 +1439,10 @@ function openQuestion(catIdx, qIdx) {
     btn.id = `opt-mc-${i}`;
     optsEl.appendChild(btn);
   });
-  // Limpiar respuestas anteriores de esta pregunta antes de empezar
-  if (db) db.ref(`responses/${catIdx}_${qIdx}`).remove();
+  // Limpiar respuestas anteriores (no en modo Ponente — el Productor ya lo hizo)
+  if (db && !state.isPonente) db.ref(`responses/${catIdx}_${qIdx}`).remove();
   statsLastSnapshot = null;
-  // Broadcast question to all players
+  // Broadcast question to all players (no-op si es Ponente)
   fbBroadcast({ type: 'question', moduleIdx: state.moduleIdx, catIdx, qIdx, timeLimit: 15 });
   // Listen for responses count
   listenResponseCount(catIdx, qIdx);
@@ -1226,6 +1450,13 @@ function openQuestion(catIdx, qIdx) {
   clearTimer();
   state.timerVal = 15;
   updateTimerUI();
+  // Ponente: ocultar controles de operador (el Productor manda)
+  if (state.isPonente) {
+    document.getElementById('btn-start-wrap').style.display = 'none';
+    document.getElementById('btn-reveal').style.display = 'none';
+    const qa = document.querySelector('.q-actions');
+    if (qa) qa.style.display = 'none';
+  }
   showScreen('question');
 }
 function reviewQuestion(catIdx, qIdx) {
@@ -1278,6 +1509,8 @@ function listenResponseCount(catIdx, qIdx) {
     const count = val ? Object.keys(val).length : 0;
     const el = document.getElementById('response-count');
     if (el) el.textContent = count;
+    const elB = document.getElementById('board-answered-count');
+    if (elB) elB.textContent = count;
     // Actualizar stats con throttle (evita 300 rebuilds/seg)
     if (document.getElementById('overlay-stats').style.display === 'flex') {
       const now = Date.now();
@@ -1504,7 +1737,7 @@ function renderScores(scores) {
 // ════════════════════════════════════════════
 let qrGenerated = false;
 const GAME_URL = 'https://robcarpinteyro.github.io/jeopardy-carnot/';
-let qrCurrentModule = 0;
+let qrCurrentModule = 2;
 
 function moduleUrl(idx) {
   return GAME_URL + '?module=' + idx;
@@ -1751,10 +1984,10 @@ function showPlayerReveal(correctAns) {
 function showPlayerIdle() {
   document.getElementById('player-content').innerHTML = `
     <div class="player-waiting">
-      <div style="font-size:clamp(1.6rem,6vw,2.4rem);font-weight:900;letter-spacing:0.06em;line-height:1;margin-bottom:0.15rem;background:linear-gradient(135deg,#F5C842 0%,#D4A017 50%,#F5C842 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">GASTRÓPARDY!</div>
-      <div style="font-size:0.72rem;color:rgba(245,200,66,0.55);letter-spacing:0.1em;font-style:italic;margin-bottom:1.2rem;">by Dr. Miguel Ángel Valdovinos</div>
+      <div style="font-size:clamp(1.6rem,6vw,2.4rem);font-weight:900;letter-spacing:0.06em;line-height:1;margin-bottom:0.15rem;background:linear-gradient(135deg,#F5C842 0%,#D4A017 50%,#F5C842 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">JeoparSII!</div>
+      <div style="font-size:0.72rem;color:rgba(245,200,66,0.55);letter-spacing:0.1em;font-style:italic;margin-bottom:1.2rem;">SII — Roma V · Summit Gastro Cancún 2026</div>
       <span class="dot"></span> Conectado — esperando pregunta…<br>
-      <span style="font-size:0.82rem;color:var(--dim);">El Dr. Valdovinos mostrará la siguiente pregunta</span><br><br>
+      <span style="font-size:0.82rem;color:var(--dim);">El Productor abrirá la siguiente pregunta</span><br><br>
       <div style="background:rgba(212,160,23,0.1);border:1px solid rgba(212,160,23,0.3);border-radius:10px;padding:0.75rem 1rem;margin:0.5rem 0 1rem;text-align:center;max-width:280px;margin-left:auto;margin-right:auto;">
         <div style="font-size:0.9rem;margin-bottom:0.2rem;">✈️</div>
         <div style="font-size:0.78rem;color:var(--gold-light);font-weight:700;margin-bottom:0.15rem;">Top 3 de este módulo → DDW 2027</div>
@@ -1770,6 +2003,263 @@ function esc(str) {
   const d = document.createElement('div');
   d.appendChild(document.createTextNode(String(str)));
   return d.innerHTML;
+}
+// ════════════════════════════════════════════
+// PONENTE MODE — tablero reactivo (proyector)
+// El Productor manda; el Ponente solo escucha y muestra
+// ════════════════════════════════════════════
+function startPonentListening() {
+  fbListenGame(data => {
+    if (!data || !data.type) return;
+    if (data.type === 'question') {
+      if (data.moduleIdx !== undefined && data.moduleIdx !== state.moduleIdx) return;
+      openQuestion(data.catIdx, data.qIdx);
+    } else if (data.type === 'timer_start') {
+      const startWrap = document.getElementById('btn-start-wrap');
+      if (startWrap && startWrap.style.display !== 'none') startTimerManual();
+    } else if (data.type === 'reveal') {
+      if (!state.revealed) revealAnswer();
+    } else if (data.type === 'idle') {
+      clearTimer();
+      renderBoard();
+      showScreen('board');
+    }
+  });
+}
+// ════════════════════════════════════════════
+// PRODUCTOR PANEL
+// ════════════════════════════════════════════
+const PROD = {
+  gameState: 'board',   // 'board' | 'question' | 'timer' | 'timer_ended' | 'revealed'
+  currentCat: -1,
+  currentQ: -1,
+  usedCells: new Set(),
+  timerInterval: null,
+  timerVal: 15,
+};
+let prodConnectedRef = null;
+let prodResponseRef  = null;
+
+const PROD_STATE_NAMES = {
+  board:        'Tablero — elige una pregunta',
+  question:     '📋 Pregunta abierta',
+  timer:        '⏱ Cronómetro corriendo',
+  timer_ended:  '⏱ Tiempo terminado',
+  revealed:     '✅ Respuesta revelada',
+};
+
+function goProductor() {
+  state.role = 'productor';
+  showScreen('productor');
+  setTimeout(() => {
+    startProductorStats();
+    if (db) {
+      db.ref('answered').once('value', snap => {
+        const val = snap.val() || {};
+        Object.keys(val).forEach(k => PROD.usedCells.add(k.replace('_', '-')));
+        renderProductorBoard();
+        updateProductorUI();
+      });
+    } else {
+      renderProductorBoard();
+      updateProductorUI();
+    }
+  }, 150);
+}
+
+function startProductorStats() {
+  if (!playersRef) return;
+  if (prodConnectedRef) prodConnectedRef.off();
+  prodConnectedRef = playersRef;
+  prodConnectedRef.on('value', snap => {
+    const val = snap.val() || {};
+    const connected = Object.values(val).filter(p => p.connected === true).length;
+    const el = document.getElementById('prod-connected');
+    if (el) el.textContent = connected;
+  });
+}
+
+function renderProductorBoard() {
+  const mod = MODULES[2]; // Módulo 3 — SII Roma V
+  const grid = document.getElementById('prod-board-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  mod.categories.forEach(cat => {
+    const h = document.createElement('div');
+    h.className = 'prod-cat-header';
+    h.textContent = cat.name;
+    grid.appendChild(h);
+  });
+  for (let qi = 0; qi < 5; qi++) {
+    for (let ci = 0; ci < 5; ci++) {
+      const q = mod.categories[ci].questions[qi];
+      const key = `${ci}-${qi}`;
+      const cell = document.createElement('button');
+      const colClass = ['prod-col-a','prod-col-b','prod-col-c','prod-col-d','prod-col-e'][ci];
+      cell.className = 'prod-cell ' + colClass + (PROD.usedCells.has(key) ? ' prod-used' : '');
+      cell.disabled = PROD.usedCells.has(key);
+      cell.textContent = q.pts;
+      cell.onclick = () => prodOpenQuestion(ci, qi);
+      grid.appendChild(cell);
+    }
+  }
+}
+
+function prodOpenQuestion(catIdx, qIdx) {
+  const key = `${catIdx}-${qIdx}`;
+  if (PROD.usedCells.has(key)) return;
+  const mod = MODULES[2];
+  const cat = mod.categories[catIdx];
+  const q   = cat.questions[qIdx];
+  PROD.currentCat = catIdx;
+  PROD.currentQ   = qIdx;
+  PROD.gameState  = 'question';
+  // Limpiar respuestas anteriores
+  if (db) db.ref(`responses/${catIdx}_${qIdx}`).remove();
+  // Broadcast a jugadores y Ponente
+  fbBroadcast({ type: 'question', moduleIdx: 2, catIdx, qIdx, timeLimit: 15 });
+  // Escuchar respuestas en tiempo real
+  if (prodResponseRef) prodResponseRef.off();
+  if (db) {
+    prodResponseRef = db.ref(`responses/${catIdx}_${qIdx}`);
+    prodResponseRef.on('value', snap => {
+      const count = snap.val() ? Object.keys(snap.val()).length : 0;
+      const el = document.getElementById('prod-answered');
+      if (el) el.textContent = count;
+    });
+  }
+  // Mostrar detalle de la pregunta
+  const letters = ['A','B','C','D'];
+  const content = document.getElementById('prod-question-content');
+  if (content) {
+    content.innerHTML = `
+      <div class="prod-q-cat">${esc(cat.name)}</div>
+      <div class="prod-q-pts">${q.pts} pts</div>
+      <div class="prod-q-text">${esc(q.q)}</div>
+      <div class="prod-q-opts">
+        ${q.opts.map((opt, i) => `
+          <div class="prod-q-opt" id="prod-opt-${i}">
+            <strong>${letters[i]}.</strong> ${esc(opt)}
+          </div>`).join('')}
+      </div>`;
+  }
+  document.getElementById('prod-board-wrap').style.display = 'none';
+  document.getElementById('prod-question-wrap').style.display = 'block';
+  const timerEl = document.getElementById('prod-timer-display');
+  if (timerEl) timerEl.style.display = 'none';
+  updateProductorUI();
+}
+
+function prodStartTimer() {
+  if (PROD.gameState !== 'question') return;
+  PROD.gameState = 'timer';
+  PROD.timerVal  = 15;
+  fbBroadcast({ type: 'timer_start', timeLimit: 15 });
+  const timerEl = document.getElementById('prod-timer-display');
+  if (timerEl) { timerEl.textContent = '15'; timerEl.style.color = 'var(--gold-light)'; timerEl.style.display = 'block'; }
+  if (PROD.timerInterval) clearInterval(PROD.timerInterval);
+  PROD.timerInterval = setInterval(() => {
+    PROD.timerVal--;
+    if (timerEl) {
+      timerEl.textContent = PROD.timerVal;
+      timerEl.style.color = PROD.timerVal > 7 ? 'var(--gold-light)' : PROD.timerVal > 3 ? '#E67E22' : '#E74C3C';
+    }
+    if (PROD.timerVal <= 0) {
+      clearInterval(PROD.timerInterval); PROD.timerInterval = null;
+      PROD.gameState = 'timer_ended';
+      updateProductorUI();
+    }
+  }, 1000);
+  updateProductorUI();
+}
+
+function prodReveal() {
+  if (!['timer','timer_ended','question'].includes(PROD.gameState)) return;
+  if (PROD.timerInterval) { clearInterval(PROD.timerInterval); PROD.timerInterval = null; }
+  PROD.gameState = 'revealed';
+  const mod = MODULES[2];
+  const q   = mod.categories[PROD.currentCat].questions[PROD.currentQ];
+  fbBroadcast({ type: 'reveal', catIdx: PROD.currentCat, qIdx: PROD.currentQ, ans: q.ans });
+  // Ocultar cronómetro, mostrar respuesta correcta
+  const timerEl = document.getElementById('prod-timer-display');
+  if (timerEl) timerEl.style.display = 'none';
+  document.querySelectorAll('.prod-q-opt').forEach((el, i) => {
+    if (i === q.ans) el.classList.add('prod-q-correct');
+    else el.style.opacity = '0.35';
+  });
+  // Marcar celda como usada
+  const key = `${PROD.currentCat}-${PROD.currentQ}`;
+  PROD.usedCells.add(key);
+  if (db) db.ref(`answered/${key.replace('-','_')}`).set(true);
+  if (prodResponseRef) prodResponseRef.off();
+  updateProductorUI();
+}
+
+function prodBackToBoard() {
+  if (PROD.timerInterval) { clearInterval(PROD.timerInterval); PROD.timerInterval = null; }
+  if (prodResponseRef)    { prodResponseRef.off(); prodResponseRef = null; }
+  PROD.gameState  = 'board';
+  PROD.currentCat = -1;
+  PROD.currentQ   = -1;
+  fbBroadcast({ type: 'idle' });
+  renderProductorBoard();
+  document.getElementById('prod-board-wrap').style.display = 'block';
+  document.getElementById('prod-question-wrap').style.display = 'none';
+  const timerEl = document.getElementById('prod-timer-display');
+  if (timerEl) timerEl.style.display = 'none';
+  updateProductorUI();
+}
+
+function prodResetBoard() {
+  if (!confirm('¿Reiniciar tablero y marcador?\nSe borrarán todos los puntos y respuestas.')) return;
+  PROD.usedCells  = new Set();
+  PROD.gameState  = 'board';
+  PROD.currentCat = -1;
+  PROD.currentQ   = -1;
+  fbResetScores();
+  fbBroadcast({ type: 'idle' });
+  document.getElementById('prod-board-wrap').style.display = 'block';
+  document.getElementById('prod-question-wrap').style.display = 'none';
+  renderProductorBoard();
+  updateProductorUI();
+}
+
+function updateProductorUI() {
+  // Estado textual
+  const stateEl = document.getElementById('prod-state-name');
+  if (stateEl) stateEl.textContent = PROD_STATE_NAMES[PROD.gameState] || PROD.gameState;
+  // Botones del dock
+  const dockBtn = document.getElementById('prod-dock-btn');
+  const backBtn = document.getElementById('prod-back-btn');
+  if (!dockBtn || !backBtn) return;
+  if (PROD.gameState === 'board') {
+    dockBtn.style.display = 'none';
+    backBtn.style.display = 'none';
+  } else if (PROD.gameState === 'question') {
+    dockBtn.style.display = 'block';
+    dockBtn.textContent   = '▶ INICIAR CRONÓMETRO';
+    dockBtn.className     = 'prod-btn-primary';
+    dockBtn.onclick       = prodStartTimer;
+    backBtn.style.display = 'block';
+  } else if (PROD.gameState === 'timer') {
+    dockBtn.style.display = 'block';
+    dockBtn.textContent   = '✅ REVELAR RESPUESTA';
+    dockBtn.className     = 'prod-btn-primary prod-green';
+    dockBtn.onclick       = prodReveal;
+    backBtn.style.display = 'block';
+  } else if (PROD.gameState === 'timer_ended') {
+    dockBtn.style.display = 'block';
+    dockBtn.textContent   = '✅ REVELAR RESPUESTA';
+    dockBtn.className     = 'prod-btn-primary prod-green prod-pulse';
+    dockBtn.onclick       = prodReveal;
+    backBtn.style.display = 'block';
+  } else if (PROD.gameState === 'revealed') {
+    dockBtn.style.display = 'block';
+    dockBtn.textContent   = '← VOLVER AL TABLERO';
+    dockBtn.className     = 'prod-btn-secondary-dock';
+    dockBtn.onclick       = prodBackToBoard;
+    backBtn.style.display = 'none';
+  }
 }
 // ════════════════════════════════════════════
 // INIT
@@ -1847,6 +2337,22 @@ window.addEventListener('beforeunload', () => {
   clearTimer();
 });
 
+// Reconexión automática cuando el jugador vuelve de background / llamada
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  if (state.role !== 'player' || !state.playerName) return;
+  // Re-establecer presencia en Firebase
+  if (myPlayerRef) {
+    myPlayerRef.update({ connected: true });
+    myPlayerRef.child('connected').onDisconnect().set(false);
+  }
+  // Actualizar dot de conexión en header
+  const dot = document.getElementById('player-conn-dot');
+  if (dot) { dot.style.background = '#2ECC71'; }
+  const txt = document.getElementById('player-conn-text');
+  if (txt) txt.textContent = 'conectado';
+});
+
 window.addEventListener('load', () => {
   const params = new URLSearchParams(window.location.search);
 
@@ -1858,13 +2364,53 @@ window.addEventListener('load', () => {
 
   document.getElementById('overlay-name').classList.remove('show');
   autoConnectFirebase();
+
+  // ── Modo Productor: ?role=productor ──────────────────────────────────
+  if (params.get('role') === 'productor') {
+    goProductor();
+    return;
+  }
+
+  // ── Modo Ponente (proyector reactivo): ?role=ponente ─────────────────
+  if (params.get('role') === 'ponente') {
+    state.role     = 'ponente';
+    state.isPonente = true;
+    state.moduleIdx = 2;
+    document.body.classList.add('ponente-mode');
+    if (db) {
+      db.ref('answered').once('value', snap => {
+        const val = snap.val() || {};
+        Object.keys(val).forEach(k => state.usedCells.add(k.replace('_', '-')));
+        renderBoard();
+        showScreen('board');
+        startPonentListening();
+      });
+    } else {
+      renderBoard();
+      showScreen('board');
+      startPonentListening();
+    }
+    return;
+  }
+
   const mod = params.get('module');
   if (mod === '0' || mod === '1' || mod === '2') {
-    // Participante llegó desde QR: ocultar landing, seleccionar módulo y entrar directo
     const idx = parseInt(mod);
     state.moduleIdx = idx;
     document.querySelectorAll('.mod-btn').forEach((b,i) => b.classList.toggle('active', i === idx));
     showScreen('player');
+
+    // ── Auto-reconexión: si hay sesión guardada para este módulo, entrar sin pedir nombre ──
+    try {
+      const savedName   = localStorage.getItem('gastro_name');
+      const savedModule = localStorage.getItem('gastro_module');
+      if (savedName && savedModule === String(idx)) {
+        activatePlayer(savedName, idx);
+        return;
+      }
+    } catch(_) {}
+
+    // Primera vez o módulo distinto → pedir nombre
     goPlayer();
   }
   // Si no hay ?module, se queda en la landing (panel del operador)
@@ -1874,9 +2420,54 @@ window.addEventListener('load', () => {
 <!-- ═══════════════════════════════════
      LIVE SCORES VIEW (?view=scores)
 ═══════════════════════════════════ -->
+<!-- ═══════════════════════════════════
+     PRODUCTOR PANEL (?role=productor)
+═══════════════════════════════════ -->
+<div id="screen-productor" class="screen">
+  <!-- Header -->
+  <div class="prod-header">
+    <div>
+      <div class="prod-title">🎛️ JeoparSII!</div>
+      <div class="prod-subtitle">Panel del Productor</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:0.6rem;color:var(--dim);letter-spacing:0.06em;">SII — Roma V</div>
+      <div style="font-size:0.57rem;color:rgba(245,200,66,0.55);margin-top:2px;">Summit Gastro · Cancún</div>
+    </div>
+  </div>
+  <!-- Stats bar -->
+  <div class="prod-stats-bar">
+    <span>🟢 <span id="prod-connected">0</span> conectados</span>
+    <span class="prod-sep">|</span>
+    <span>✅ <span id="prod-answered">0</span> respondidas</span>
+    <button class="prod-reset-btn" onclick="prodResetBoard()">🔄 Reset</button>
+  </div>
+  <!-- Estado actual -->
+  <div class="prod-state-box">
+    <div class="prod-state-tag">Estado actual</div>
+    <div class="prod-state-name" id="prod-state-name">Tablero — elige una pregunta</div>
+  </div>
+  <!-- Mini tablero (visible en estado 'board') -->
+  <div id="prod-board-wrap">
+    <div class="prod-board-grid" id="prod-board-grid"></div>
+  </div>
+  <!-- Detalle de pregunta (visible cuando hay pregunta activa) -->
+  <div id="prod-question-wrap" style="display:none;">
+    <div id="prod-question-content"></div>
+    <div id="prod-timer-display" style="display:none;">15</div>
+  </div>
+  <!-- Espaciador para el dock fijo -->
+  <div style="height:140px;flex-shrink:0;"></div>
+  <!-- Dock fijo -->
+  <div class="prod-dock">
+    <button id="prod-back-btn" class="prod-btn-back" style="display:none;" onclick="prodBackToBoard()">← Forzar vuelta al tablero</button>
+    <button id="prod-dock-btn" class="prod-btn-primary" style="display:none;" onclick=""></button>
+  </div>
+</div>
+
 <div id="live-scores-view">
   <div class="lsv-header">
-    <div class="lsv-title">🏆 GASTRÓPARDY!</div>
+    <div class="lsv-title">🏆 JeoparSII!</div>
     <div style="text-align:right;">
       <div class="lsv-live-badge">
         <div class="lsv-dot"></div> EN VIVO
